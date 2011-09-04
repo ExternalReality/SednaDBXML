@@ -23,7 +23,9 @@ Library
   Default-Language:       Haskell98
   Build-Depends:          base == 4.*,
                           bindings-DSL
-  Exposed-Modules:        Database.SednaDB.Sedna
+  Exposed-Modules:        Database.SednaDB.SpDefs      
+                          Database.SednaDB.Sedna
+                          
   Include-Dirs:           /usr/local/sedna/driver/c/  
                                
   Default-Extensions:     ForeignFunctionInterface

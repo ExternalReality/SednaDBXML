@@ -4,6 +4,8 @@
 module Database.SednaDB.Sedna where
 #strict_import
 
+import Database.SednaDB.SpDefs
+
 #num QUERY_EXECUTION_TIME                      
 #num BULK_LOAD_PORTION                         
 
@@ -71,13 +73,9 @@ module Database.SednaDB.Sedna where
 #num SEDNA_ATTR_LOG_AMOUNT
 #num SEDNA_ATTR_MAX_RESULT_SIZE
 
-#starttype struct conn_bulk_load
-#field bulk_load_started , CStringLen
-#field doc_name          , CStringLen
-#field col_name          , CStringLen
-#stoptype
+#opaque_t conn_bulk_load
 
-#callback debug_handler_t, FunPtr (se_debug_info_type -> CString -> IO ())
+#callback debug_handler_t, FunPtr (<se_debug_info_type> -> CString -> IO ())
 
 #opaque_t SednaConnection
 
@@ -105,9 +103,9 @@ module Database.SednaDB.Sedna where
 
 #ccall SEshowTime , Ptr <SednaConnection>  -> IO CInt
 
-#ccall SEsetConnectionAttr, Ptr <SednaConnection> -> <SEattr> -> Ptr attrValue -> Ptr attValueLength -> IO CInt 
-#ccall SEgetConnectionAttr, Ptr <SednaConnection> -> <SEattr> -> Ptr attrValue -> Ptr attValueLength -> IO CInt 
+#ccall SEsetConnectionAttr, Ptr <SednaConnection> -> <SEattr> -> Ptr () -> CInt -> IO CInt 
+#ccall SEgetConnectionAttr, Ptr <SednaConnection> -> <SEattr> -> Ptr () -> CInt -> IO CInt 
 
 #ccall SEresetAllConnectionAttr, Ptr <SednaConnection>  -> IO CInt
 
-#ccall SEsetDebugHandler, Ptr <SednaConnection>  -> debug_handler_t -> Ptr ()
+#ccall SEsetDebugHandler, Ptr <SednaConnection>  -> <debug_handler_t> -> Ptr ()
