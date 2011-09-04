@@ -1,26 +1,36 @@
-Name:			SednaDB
-Version:		0.0.0
-License:		GPL3
-License-File:		LICENSE
-Cabal-Version:  	>= 1.10
-Author:			Eric C. Jones
-Maintainer:   		ecjones@gmail.com
-Stability:		alpha
-Synopsis:		Sedna Native XML Binding
-Description:		Sedna is a free native XML database which provides a full range of
-			core database services - persistent storage, ACID transactions,
-			security, indices, hot backup. Flexible XML processing facilities
-			include W3C XQuery implementation, tight integration of XQuery with
-			full-text search facilities and a node-level update language.
+Name:                   SednaDB
+Version:                0.0.0
+License:                GPL-3
+Cabal-Version:          >= 1.10.0
+License-File:           LICENSE
+Author:                 Eric C. Jones
+Build-Type:             Simple
+Maintainer:             ecjones@gmail.com
+Stability:              alpha
+Synopsis:               Sedna Native XML Binding
+Description:            Sedna is a free native XML database which provides a full range of
+                        core database services - persistent storage, ACID transactions,
+                        security, indices, hot backup. Flexible XML processing facilities
+                        include W3C XQuery implementation, tight integration of XQuery with
+                        full-text search facilities and a node-level update language.
 
-			Sedna Home Page:
-			http://www.sedna.org/
+                        Sedna Home Page:
+                        http://www.sedna.org/
 
-Category:		Database
-Build-Type:		Simple
-Library
-	Build-Depends:		base === 4.*, bindings-dsl >= 1.0
-	Extentions:		ForeignFuntionInterface
+Category:               Database
+
+Library        
+  Default-Language:       Haskell98
+  Build-Depends:          base == 4.*,
+                          bindings-DSL
+  Exposed-Modules:        Database.SednaDB.Sedna
+  Include-Dirs:           /usr/local/sedna/driver/c/  
+                               
+  Default-Extensions:     ForeignFunctionInterface
+
+
+
+
 
 
 

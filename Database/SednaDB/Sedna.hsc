@@ -1,10 +1,8 @@
-#include <bingings.dsl.h>
+#include <bindings.dsl.h>
 #include <libsedna.h>
 
-module Database.SednaDB where
+module Database.SednaDB.Sedna where
 #strict_import
-
-import Database.SpDefs
 
 #num QUERY_EXECUTION_TIME                      
 #num BULK_LOAD_PORTION                         
@@ -74,42 +72,42 @@ import Database.SpDefs
 #num SEDNA_ATTR_MAX_RESULT_SIZE
 
 #starttype struct conn_bulk_load
-#field bulk_load_started , CStringLen; 
-#field doc_name,         , CStringLen;
-#field col_name          , CStringLen;
+#field bulk_load_started , CStringLen
+#field doc_name          , CStringLen
+#field col_name          , CStringLen
 #stoptype
 
 #callback debug_handler_t, FunPtr (se_debug_info_type -> CString -> IO ())
 
 #opaque_t SednaConnection
 
-#callback SEconnect,  Ptr SednaConnection -> CString -> CString -> CString -> CString -> IO CInt
-#callback SEclose,    Ptr SednaConnection -> IO CInt
-#callback SEbegin,    Ptr SednaConnection -> IO CInt
-#callback SErollBack, Ptr SednaConnection -> IO CInt
-#callback SEcommit,   Ptr SednaConnection -> IO CInt
+#ccall SEconnect,  Ptr <SednaConnection> -> CString -> CString -> CString -> CString -> IO CInt
+#ccall SEclose,    Ptr <SednaConnection> -> IO CInt
+#ccall SEbegin,    Ptr <SednaConnection> -> IO CInt
+#ccall SErollBack, Ptr <SednaConnection> -> IO CInt
+#ccall SEcommit,   Ptr <SednaConnection> -> IO CInt
 
 
-#callback SEexecuteLong, Ptr SednaConnection -> CString -> IO CInt
-#callback SEexecute,     Ptr SednaConnection -> CString -> IO CInt
+#ccall SEexecuteLong, Ptr <SednaConnection> -> CString -> IO CInt
+#ccall SEexecute,     Ptr <SednaConnection> -> CString -> IO CInt
  
-#callback SEgetData,     Ptr SednaConnection -> CString -> CInt -> IO CInt
-#callback SEloadData,    Ptr SednaConnection -> CString -> CInt ->  CString -> CString -> IO CInt
-#callback SEendLoadData, Ptr SednaConnection  -> IO CInt
+#ccall SEgetData,     Ptr <SednaConnection> -> CString -> CInt -> IO CInt
+#ccall SEloadData,    Ptr <SednaConnection> -> CString -> CInt ->  CString -> CString -> IO CInt
+#ccall SEendLoadData, Ptr <SednaConnection>  -> IO CInt
 
-#callback SEnext -> Ptr SednaConnection  -> IO CInt
+#ccall SEnext, Ptr <SednaConnection>  -> IO CInt
 
-#callback SEgetLastErrorCode, Ptr SednaConnection  -> IO CInt
-#callback SEgetLastErrorMsg , Ptr SednaConnection  -> IO CInt
+#ccall SEgetLastErrorCode, Ptr <SednaConnection>  -> IO CInt
+#ccall SEgetLastErrorMsg , Ptr <SednaConnection>  -> IO CInt
 
-#callback SEconnectionStatus,  Ptr SednaConnection  -> IO CInt
-#callback SEtransactionStatus, Ptr SednaConnection  -> IO CInt
+#ccall SEconnectionStatus,  Ptr <SednaConnection>  -> IO CInt
+#ccall SEtransactionStatus, Ptr <SednaConnection>  -> IO CInt
 
-#callback SEshowTime , Ptr SednaConnection  -> IO CInt
+#ccall SEshowTime , Ptr <SednaConnection>  -> IO CInt
 
-#callback SEsetConnectionAttr, Ptr SednaConnection -> SEattr -> Ptr attrValue -> Ptr attValueLength -> IO CInt 
-#callback SEgetConnectionAttr, Ptr SednaConnection -> SEattr -> Ptr attrValue -> Ptr attValueLength -> IO CInt 
+#ccall SEsetConnectionAttr, Ptr <SednaConnection> -> <SEattr> -> Ptr attrValue -> Ptr attValueLength -> IO CInt 
+#ccall SEgetConnectionAttr, Ptr <SednaConnection> -> <SEattr> -> Ptr attrValue -> Ptr attValueLength -> IO CInt 
 
-#callback SEresetAllConnectionAttr , Ptr SednaConnection  -> IO CInt
+#ccall SEresetAllConnectionAttr, Ptr <SednaConnection>  -> IO CInt
 
-#callbackSEsetDebugHandler , Ptr SednaConnection  -> debug_handler_t -> Ptr ()
+#ccall SEsetDebugHandler, Ptr <SednaConnection>  -> debug_handler_t -> Ptr ()
