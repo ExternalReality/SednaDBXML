@@ -1,5 +1,6 @@
-SednaDBXML is a Haskell library and a binding to C
-drivers of sedna native XML Database System.
+SednaDBXML is a Haskell library and a binding to
+the C language drivers of sedna native XML
+Database System.
 
 This software is in an extremely early state. The
 low level c bindings are still being established
