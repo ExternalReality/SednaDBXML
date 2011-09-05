@@ -19,14 +19,15 @@ Description:            Sedna is a free native XML database which provides a ful
 
 Category:               Database
 
-Library        
+Library
+  Hs-Source-Dirs:         src        
   Default-Language:       Haskell98
   Build-Depends:          base == 4.*,
                           bindings-DSL
   Exposed-Modules:        Database.SednaDB.SpDefs      
                           Database.SednaDB.Sedna
                           
-  Include-Dirs:           /usr/local/sedna/driver/c/  
+  Include-Dirs:           include  
                                
   Default-Extensions:     ForeignFunctionInterface
 
