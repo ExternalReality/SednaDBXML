@@ -1,10 +1,10 @@
 #include <bindings.dsl.h>
 #include <libsedna.h>
 
-module Database.SednaDB.Sedna where
+module Database.SednaDB.Internal.Sedna where
 #strict_import
 
-import Database.SednaDB.SpDefs
+import Database.SednaDB.Internal.SpDefs
 
 #num QUERY_EXECUTION_TIME                      
 #num BULK_LOAD_PORTION                         
@@ -73,11 +73,49 @@ import Database.SednaDB.SpDefs
 #num SEDNA_ATTR_LOG_AMOUNT
 #num SEDNA_ATTR_MAX_RESULT_SIZE
 
-#opaque_t conn_bulk_load
+#starttype struct conn_bulk_load
+#field       bulk_load_started , CChar    
+#array_field doc_name          , CChar
+#array_field col_name          , CChar
+#stoptype
 
 #callback debug_handler_t, FunPtr (<se_debug_info_type> -> CString -> IO ())
 
-#opaque_t SednaConnection
+#starttype struct SednaConnection
+#array_field  url                    , CChar
+#array_field  db_name                , CChar
+#array_field  login                  , CChar
+#array_field  password               , CChar
+#array_field  session_directory      , CChar
+#field        socket                 , CInt
+
+#field       last_error              , CInt
+#array_field last_error_msg          , CChar
+#array_field query_time              , CChar
+
+#field       socket_keeps_data       , CChar
+#field       first_next              , CChar
+#field       result_end              , CChar
+#field       in_query                , CChar        
+#field       cbl                     , <conn_bulk_load>
+
+#field       isInTransaction         , CInt
+#field       isConnectionOk          , CInt
+
+#field       autocommit              , CInt
+
+#field       local_data_length       , CInt 
+#field       local_data_offset       , CInt 
+#array_field local_data_buf          , CChar
+
+#field       msg                     , <msg_struct>
+        
+#field       debug_handler           , <debug_handler_t>
+        
+#field       boundary_space_preserve , CChar
+#field       query_timeout           , CInt 
+#field       max_result_size         , CInt
+#stoptype
 
 #ccall SEconnect,  Ptr <SednaConnection> -> CString -> CString -> CString -> CString -> IO CInt
 #ccall SEclose,    Ptr <SednaConnection> -> IO CInt
