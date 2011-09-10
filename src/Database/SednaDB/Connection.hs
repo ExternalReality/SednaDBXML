@@ -1,15 +1,15 @@
 module Database.SednaDB.Connection where
 
+import Data.ByteString
+import Data.ByteString.Unsafe
+
 import Foreign
 import Foreign.Ptr
 import Foreign.C.Types
 import Foreign.C.String
 import Foreign.Marshal.Alloc
 
-import Control.Monad
-import Control.Monad.Reader
 import Database.SednaDB.Internal.Sedna
-
 
 type SednaConnection = Ptr C'SednaConnection
 
@@ -58,6 +58,33 @@ sednaExecuteLong = sednaExecuteAction c'SEexecuteLong
 
 sednaExecute :: SednaConnection -> String -> IO Int
 sednaExecute = sednaExecuteAction c'SEexecute
+
+sednaGetData :: SednaConnection -> Int -> IO Int
+sednaGetData = undefined
+
+sednaLoadData :: SednaConnection -> ByteString -> Int -> String -> String -> IO Int
+sednaLoadData conn buff byteCount docName colName = undefined
+
+sednaEndLoadData :: SednaConnection -> IO Int
+sednaEndLoadData = withSednaConnection c'SEendLoadData 
+
+sednaNext :: SednaConnection -> IO Int
+sednaNext = withSednaConnection c'SEnext
+
+sednaGetLastErrorCode :: SednaConnection -> IO Int
+sednaGetLastErrorCode = withSednaConnection c'SEgetLastErrorCode
+
+sednaGetLastErrorMsg :: SednaConnection -> IO Int
+sednaGetLastErrorMsg = withSednaConnection c'SEgetLastErrorMsg
+
+sednaTransactionStatus :: SednaConnection -> IO Int
+sednaTransactionStatus = withSednaConnection c'SEtransactionStatus
+
+sednaConnectionAttr :: SednaConnection -> IO Int
+sednaConnectionAttr = undefined
+
+
+
 
 
 
