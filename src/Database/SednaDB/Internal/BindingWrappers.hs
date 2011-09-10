@@ -1,4 +1,4 @@
-module Database.SednaDB.Connection where
+module Database.SednaDB.BindingWrappers where
 
 import Data.ByteString
 import Data.ByteString.Unsafe
