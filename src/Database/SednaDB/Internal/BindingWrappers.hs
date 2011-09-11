@@ -12,6 +12,7 @@ import Foreign.Marshal.Alloc
 import Database.SednaDB.Internal.Sedna
 
 type SednaConnection = Ptr C'SednaConnection
+type DebugHandler    = C'debug_handler_t
 
 sednaConnect :: String -> String -> String -> String -> IO SednaConnection
 sednaConnect url dbname login password  =  
@@ -80,17 +81,17 @@ sednaGetLastErrorMsg = withSednaConnection c'SEgetLastErrorMsg
 sednaTransactionStatus :: SednaConnection -> IO Int
 sednaTransactionStatus = withSednaConnection c'SEtransactionStatus
 
-sednaConnectionAttr :: SednaConnection -> IO Int
-sednaConnectionAttr = undefined
+sednaShowTime :: SednaConnection -> IO Int
+sednaShowTime = withSednaConnection c'SEshowTime
 
+sednaSetConnectionAttr :: SednaConnection -> Int -> IO Int
+sednaSetConnectionAttr = undefined
 
+sednaGetConnectionAttr :: SednaConnection -> Int -> IO Int
+sednaGetConnectionAttr = undefined
 
+sednaResetAllConnectionAttr :: SednaConnection -> IO Int
+sednaResetAllConnectionAttr = withSednaConnection c'SEresetAllConnectionAttr
 
-
-
-
-  
-                            
-     
-                     
-                      
+sednaSetDebugHandler :: SednaConnection -> DebugHandler -> IO ()
+sednaSetDebugHandler = undefined
