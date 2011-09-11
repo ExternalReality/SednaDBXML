@@ -3,18 +3,24 @@ module DataBase.SednaDB.BindingWrappers where
 import Data.ByteString
 import Data.ByteString.Unsafe
 
+import Database.SednaDB.Internal.Sedna
+import Database.SednaDB.Internal.SednaConnectionAttributes 
+import Database.SednaDB.Internal.SednaResponseCodes
+
 import Foreign
 import Foreign.Ptr
 import Foreign.C.Types
 import Foreign.C.String
 import Foreign.Marshal.Alloc
 
-import Database.SednaDB.Internal.Sedna
-import Database.SednaDB.Internal.SednaConnectionAttributes 
-import Database.SednaDB.Internal.SednaResponseCodes
+import Prelude hiding (replicate)
 
 type SednaConnection = Ptr C'SednaConnection
 type DebugHandler    = C'debug_handler_t
+
+data SednaResponse = SednaResponse { responseCode :: SednaResponseCode
+                                   , result       :: ByteString 
+                                   }  
 
 sednaConnect :: String -> String -> String -> String -> IO SednaConnection
 sednaConnect url dbname login password  =  
@@ -62,9 +68,16 @@ sednaExecuteLong = sednaExecuteAction c'SEexecuteLong
 sednaExecute :: SednaConnection -> String -> IO SednaResponseCode
 sednaExecute = sednaExecuteAction c'SEexecute
 
-sednaGetData :: SednaConnection -> Int -> IO SednaResponseCode
-sednaGetData = undefined
-
+sednaGetData :: SednaConnection -> Int -> IO SednaResponse
+sednaGetData conn size = useAsCStringLen (replicate size 0) loadData
+  where
+    loadData buff = do
+      let buff' = fst buff 
+      let size' = fromIntegral (snd buff)
+      resultCode <- fmap SednaResponseCode $ c'SEgetData conn buff' size'      
+      result     <- packCStringLen (buff', fromIntegral size')
+      return $ SednaResponse resultCode result 
+  
 sednaLoadData :: SednaConnection -> ByteString -> String -> String -> IO SednaResponseCode
 sednaLoadData conn buff docName colName = 
   do
