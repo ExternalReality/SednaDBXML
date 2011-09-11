@@ -10,14 +10,6 @@ import Database.SednaDB.Internal.SpDefs
 #num BULK_LOAD_PORTION                         
 
 #integral_t enum SEattr
-#num SEDNA_ATTR_AUTOCOMMIT
-#num SEDNA_ATTR_SESSION_DIRECTORY
-#num SEDNA_ATTR_DEBUG
-#num SEDNA_ATTR_BOUNDARY_SPACE_PRESERVE_WHILE_LOAD
-#num SEDNA_ATTR_CONCURRENCY_TYPE
-#num SEDNA_ATTR_QUERY_EXEC_TIMEOUT
-#num SEDNA_ATTR_LOG_AMOUNT
-#num SEDNA_ATTR_MAX_RESULT_SIZE
 
 #starttype struct conn_bulk_load
 #field       bulk_load_started , CChar    

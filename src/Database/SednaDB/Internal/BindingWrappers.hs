@@ -10,6 +10,7 @@ import Foreign.C.String
 import Foreign.Marshal.Alloc
 
 import Database.SednaDB.Internal.Sedna
+import Database.SedanDB.Internal.SednaConnectionAttributes 
 import Database.SednaDB.Internal.SednaResponseCodes
 
 type SednaConnection = Ptr C'SednaConnection
