@@ -10,7 +10,7 @@ import Foreign.C.String
 import Foreign.Marshal.Alloc
 
 import Database.SednaDB.Internal.Sedna
-import Database.SedanDB.Internal.SednaConnectionAttributes 
+import Database.SednaDB.Internal.SednaConnectionAttributes 
 import Database.SednaDB.Internal.SednaResponseCodes
 
 type SednaConnection = Ptr C'SednaConnection
@@ -97,10 +97,10 @@ sednaTransactionStatus = withSednaConnection c'SEtransactionStatus
 sednaShowTime :: SednaConnection -> IO SednaResponseCode
 sednaShowTime = withSednaConnection c'SEshowTime
 
-sednaSetConnectionAttr :: SednaConnection -> Int -> IO SednaResponseCode
+sednaSetConnectionAttr :: SednaConnection -> SednaConnectionAttr -> IO SednaResponseCode
 sednaSetConnectionAttr = undefined
 
-sednaGetConnectionAttr :: SednaConnection -> Int -> IO SednaResponseCode
+sednaGetConnectionAttr :: SednaConnection -> SednaConnectionAttr -> IO SednaResponseCode
 sednaGetConnectionAttr = undefined
 
 sednaResetAllConnectionAttr :: SednaConnection -> IO SednaResponseCode
