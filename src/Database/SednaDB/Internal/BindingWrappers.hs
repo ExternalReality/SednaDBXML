@@ -1,4 +1,4 @@
-module Database.SednaDB.BindingWrappers where
+module DataBase.SednaDB.BindingWrappers where
 
 import Data.ByteString
 import Data.ByteString.Unsafe
@@ -10,6 +10,7 @@ import Foreign.C.String
 import Foreign.Marshal.Alloc
 
 import Database.SednaDB.Internal.Sedna
+import Database.SednaDB.Internal.SednaResponseCodes
 
 type SednaConnection = Ptr C'SednaConnection
 type DebugHandler    = C'debug_handler_t
@@ -27,43 +28,43 @@ sednaConnect url dbname login password  =
                                cDbname 
                                cLogin 
                                cPassword
-
+                               
       mapM_ free [cUrl,cDbname,cLogin,cPassword]
       return conn
       
-withSednaConnection :: (SednaConnection ->  IO CInt) -> SednaConnection -> IO Int
+withSednaConnection :: (SednaConnection ->  IO CInt) -> SednaConnection -> IO SednaResponseCode
 withSednaConnection sednaAction conn = 
   do 
-    resultCode <- sednaAction $ conn
-    return $ fromIntegral resultCode
+    result <- sednaAction $ conn
+    return  $ SednaResponseCode result
     
-sednaCloseConnection :: SednaConnection -> IO Int 
+sednaCloseConnection :: SednaConnection -> IO SednaResponseCode 
 sednaCloseConnection = withSednaConnection c'SEclose 
 
-sednaBegin :: SednaConnection -> IO Int
+sednaBegin :: SednaConnection -> IO SednaResponseCode
 sednaBegin = withSednaConnection c'SEbegin
 
-sednaRollback :: SednaConnection -> IO Int
+sednaRollback :: SednaConnection -> IO SednaResponseCode
 sednaRollback = withSednaConnection c'SErollback
 
-sendaCommit :: SednaConnection -> IO Int
+sendaCommit :: SednaConnection -> IO SednaResponseCode
 sendaCommit = withSednaConnection c'SEcommit
 
-sednaExecuteAction :: (SednaConnection -> CString -> IO CInt) -> SednaConnection -> String -> IO Int 
+sednaExecuteAction :: (SednaConnection -> CString -> IO CInt) -> SednaConnection -> String -> IO SednaResponseCode 
 sednaExecuteAction sednaQueryAction conn query = do 
   resultCode <- withCString query $ sednaQueryAction conn
-  return $ fromIntegral resultCode
+  return $ SednaResponseCode resultCode
   
-sednaExecuteLong :: SednaConnection -> String -> IO Int
+sednaExecuteLong :: SednaConnection -> String -> IO SednaResponseCode
 sednaExecuteLong = sednaExecuteAction c'SEexecuteLong
 
-sednaExecute :: SednaConnection -> String -> IO Int
+sednaExecute :: SednaConnection -> String -> IO SednaResponseCode
 sednaExecute = sednaExecuteAction c'SEexecute
 
-sednaGetData :: SednaConnection -> Int -> IO Int
+sednaGetData :: SednaConnection -> Int -> IO SednaResponseCode
 sednaGetData = undefined
 
-sednaLoadData :: SednaConnection -> ByteString -> String -> String -> IO Int
+sednaLoadData :: SednaConnection -> ByteString -> String -> String -> IO SednaResponseCode
 sednaLoadData conn buff docName colName = 
   do
     useAsCStringLen buff loadData 
@@ -75,33 +76,33 @@ sednaLoadData conn buff docName colName =
           cColName <- newCString colName
           result   <- c'SEloadData conn buff' bytes cDocName cColName  
           mapM_ free [cDocName, cColName]
-          return $ fromIntegral result
+          return $ SednaResponseCode result
                          
-sednaEndLoadData :: SednaConnection -> IO Int
+sednaEndLoadData :: SednaConnection -> IO SednaResponseCode
 sednaEndLoadData = withSednaConnection c'SEendLoadData 
 
-sednaNext :: SednaConnection -> IO Int
+sednaNext :: SednaConnection -> IO SednaResponseCode
 sednaNext = withSednaConnection c'SEnext
 
-sednaGetLastErrorCode :: SednaConnection -> IO Int
+sednaGetLastErrorCode :: SednaConnection -> IO SednaResponseCode
 sednaGetLastErrorCode = withSednaConnection c'SEgetLastErrorCode
 
-sednaGetLastErrorMsg :: SednaConnection -> IO Int
+sednaGetLastErrorMsg :: SednaConnection -> IO SednaResponseCode
 sednaGetLastErrorMsg = withSednaConnection c'SEgetLastErrorMsg
 
-sednaTransactionStatus :: SednaConnection -> IO Int
+sednaTransactionStatus :: SednaConnection -> IO SednaResponseCode
 sednaTransactionStatus = withSednaConnection c'SEtransactionStatus
 
-sednaShowTime :: SednaConnection -> IO Int
+sednaShowTime :: SednaConnection -> IO SednaResponseCode
 sednaShowTime = withSednaConnection c'SEshowTime
 
-sednaSetConnectionAttr :: SednaConnection -> Int -> IO Int
+sednaSetConnectionAttr :: SednaConnection -> Int -> IO SednaResponseCode
 sednaSetConnectionAttr = undefined
 
-sednaGetConnectionAttr :: SednaConnection -> Int -> IO Int
+sednaGetConnectionAttr :: SednaConnection -> Int -> IO SednaResponseCode
 sednaGetConnectionAttr = undefined
 
-sednaResetAllConnectionAttr :: SednaConnection -> IO Int
+sednaResetAllConnectionAttr :: SednaConnection -> IO SednaResponseCode
 sednaResetAllConnectionAttr = withSednaConnection c'SEresetAllConnectionAttr
 
 sednaSetDebugHandler :: SednaConnection -> DebugHandler -> IO ()

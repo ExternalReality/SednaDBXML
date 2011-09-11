@@ -9,60 +9,6 @@ import Database.SednaDB.Internal.SpDefs
 #num QUERY_EXECUTION_TIME                      
 #num BULK_LOAD_PORTION                         
 
-#num SEDNA_OPERATION_SUCCEEDED                
-
-#num SEDNA_SESSION_OPEN                       
-#num SEDNA_SESSION_CLOSED                     
-#num SEDNA_AUTHENTICATION_FAILED              
-#num SEDNA_OPEN_SESSION_FAILED                
-#num SEDNA_CLOSE_SESSION_FAILED               
-
-#num SEDNA_QUERY_SUCCEEDED                    
-#num SEDNA_QUERY_FAILED                       
-
-#num SEDNA_UPDATE_SUCCEEDED                   
-#num SEDNA_UPDATE_FAILED                      
-
-#num SEDNA_BULK_LOAD_SUCCEEDED                
-#num SEDNA_BULK_LOAD_FAILED                   
-
-#num SEDNA_BEGIN_TRANSACTION_SUCCEEDED        
-#num SEDNA_BEGIN_TRANSACTION_FAILED           
-
-#num SEDNA_ROLLBACK_TRANSACTION_SUCCEEDED     
-#num SEDNA_ROLLBACK_TRANSACTION_FAILED        
-                                                                        
-#num SEDNA_COMMIT_TRANSACTION_SUCCEEDED                              
-#num SEDNA_COMMIT_TRANSACTION_FAILED                                 
-                                                                        
-#num SEDNA_NEXT_ITEM_SUCCEEDED                                       
-#num SEDNA_NEXT_ITEM_FAILED                                          
-                                                                        
-#num SEDNA_NO_ITEM                                                   
-#num SEDNA_RESULT_END                                                
-                                                                        
-#num SEDNA_DATA_CHUNK_LOADED                                         
-                                                                        
-#num SEDNA_ERROR                                                     
-
-#num SEDNA_TRANSACTION_ACTIVE                                        
-#num SEDNA_NO_TRANSACTION                                            
-                                                                        
-#num SEDNA_CONNECTION_OK                                             
-#num SEDNA_CONNECTION_CLOSED                                         
-#num SEDNA_CONNECTION_FAILED                        
-
-#num SEDNA_AUTOCOMMIT_OFF                                            
-#num SEDNA_AUTOCOMMIT_ON                                             
-                                                                        
-#num SEDNA_SET_ATTRIBUTE_SUCCEEDED                                   
-#num SEDNA_GET_ATTRIBUTE_SUCCEEDED                                   
-                                                                        
-#num SEDNA_RESET_ATTRIBUTES_SUCCEEDED                                
-                                                                        
-#num SEDNA_BOUNDARY_SPACE_PRESERVE_OFF                               
-#num SEDNA_BOUNDARY_SPACE_PRESERVE_ON
-
 #integral_t enum SEattr
 #num SEDNA_ATTR_AUTOCOMMIT
 #num SEDNA_ATTR_SESSION_DIRECTORY

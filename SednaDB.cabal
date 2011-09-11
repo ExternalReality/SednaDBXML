@@ -26,14 +26,16 @@ Library
                           bindings-DSL
   Exposed-Modules:        Database.SednaDB.Internal.SpDefs      
                           Database.SednaDB.Internal.Sedna
+                          Database.SednaDB.Internal.SednaResponseCodes
   
   Include-Dirs:           /usr/local/sedna/driver/c  
   Includes:               libsedna.h,
                           sp_defs.h
-  Extra-Lib-Dirs:         /usr/local/sedna/driver/c,
-                          /home/objectivity/dev/SednaDB-Haskell/lib
+  Extra-Lib-Dirs:         /usr/local/sedna/driver/c
+
 
   Extra-Libraries:        sedna 
+
   Ghc-Options:            -Wall
                             
                              
