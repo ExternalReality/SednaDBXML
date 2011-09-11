@@ -36,13 +36,9 @@ newtype SednaResponseCode = SednaResponseCode { sednaResponseCode :: CInt }
  , noTransaction                = SEDNA_NO_TRANSACTION                     
  , connectionOK                 = SEDNA_CONNECTION_OK                      
  , connectionClosed             = SEDNA_CONNECTION_CLOSED                  
- , connectionFailed             = SEDNA_CONNECTION_FAILED                  
- , autoCommitOff                = SEDNA_AUTOCOMMIT_OFF                     
- , autoCommitOn                 = SEDNA_AUTOCOMMIT_ON                      
+ , connectionFailed             = SEDNA_CONNECTION_FAILED                             
  , setAttributeSucceeded        = SEDNA_SET_ATTRIBUTE_SUCCEEDED            
  , getAttributeSucceeded        = SEDNA_GET_ATTRIBUTE_SUCCEEDED          
  , resetAttributeSucceeded      = SEDNA_RESET_ATTRIBUTES_SUCCEEDED         
- , boundarySpacePreserverOff    = SEDNA_BOUNDARY_SPACE_PRESERVE_OFF        
- , boundarySpacePreserveOn      = SEDNA_BOUNDARY_SPACE_PRESERVE_ON  
  }                                    
   

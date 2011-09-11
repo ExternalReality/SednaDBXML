@@ -25,7 +25,7 @@ data SednaResponse = SednaResponse { responseCode :: SednaResponseCode
 sednaConnect :: String -> String -> String -> String -> IO SednaConnection
 sednaConnect url dbname login password  =  
     do
-      conn      <- malloc
+      conn      <- malloc --they say malloc is very expensive and I'm not rich
       cUrl      <- newCString url 
       cDbname   <- newCString dbname 
       cLogin    <- newCString login
