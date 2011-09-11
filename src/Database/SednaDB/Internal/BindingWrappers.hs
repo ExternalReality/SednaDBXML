@@ -63,9 +63,20 @@ sednaExecute = sednaExecuteAction c'SEexecute
 sednaGetData :: SednaConnection -> Int -> IO Int
 sednaGetData = undefined
 
-sednaLoadData :: SednaConnection -> ByteString -> Int -> String -> String -> IO Int
-sednaLoadData conn buff byteCount docName colName = undefined
-
+sednaLoadData :: SednaConnection -> ByteString -> String -> String -> IO Int
+sednaLoadData conn buff docName colName = 
+  do
+    useAsCStringLen buff loadData 
+      where
+        loadData s = do
+          let buff' = fst s
+          let bytes = fromIntegral $ snd s
+          cDocName <- newCString docName
+          cColName <- newCString colName
+          result   <- c'SEloadData conn buff' bytes cDocName cColName  
+          mapM_ free [cDocName, cColName]
+          return $ fromIntegral result
+                         
 sednaEndLoadData :: SednaConnection -> IO Int
 sednaEndLoadData = withSednaConnection c'SEendLoadData 
 
