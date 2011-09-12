@@ -9,8 +9,6 @@ import Database.SednaDB.Internal.SpDefs
 #num QUERY_EXECUTION_TIME                      
 #num BULK_LOAD_PORTION                         
 
-#integral_t enum SEattr
-
 #starttype struct conn_bulk_load
 #field       bulk_load_started , CChar    
 #array_field doc_name          , CChar
@@ -79,8 +77,8 @@ import Database.SednaDB.Internal.SpDefs
 
 #ccall SEshowTime , Ptr <SednaConnection>  -> IO CInt
 
-#ccall SEsetConnectionAttr, Ptr <SednaConnection> -> <SEattr> -> Ptr () -> CInt -> IO CInt 
-#ccall SEgetConnectionAttr, Ptr <SednaConnection> -> <SEattr> -> Ptr () -> CInt -> IO CInt 
+#ccall SEsetConnectionAttr, Ptr <SednaConnection> -> CUInt -> Ptr () -> CInt -> IO CInt 
+#ccall SEgetConnectionAttr, Ptr <SednaConnection> -> CUInt -> Ptr () -> CInt -> IO CInt 
 
 #ccall SEresetAllConnectionAttr, Ptr <SednaConnection>  -> IO CInt
 
