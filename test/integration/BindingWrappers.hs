@@ -70,6 +70,3 @@ connectionTests  = TestList [testOpenConnection, testCloseConnection]
 
 transactionTests :: Test
 transactionTests = TestList [testBeginTransaction]
-
-main = do
-        runTestTT connectionTests

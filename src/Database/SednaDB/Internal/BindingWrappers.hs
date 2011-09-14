@@ -10,7 +10,6 @@ import Foreign
 import Foreign.Ptr
 import Foreign.C.Types
 import Foreign.C.String
-import Foreign.Marshal.Alloc
 
 import Prelude hiding (replicate)
 
