@@ -1,7 +1,6 @@
-module DataBase.SednaDB.BindingWrappers where
+module Database.SednaDB.Internal.BindingWrappers where
 
 import Data.ByteString
-import Data.ByteString.Unsafe
 
 import Database.SednaDB.Internal.Sedna
 import Database.SednaDB.Internal.SednaConnectionAttributes 
@@ -110,7 +109,7 @@ sednaTransactionStatus = withSednaConnection c'SEtransactionStatus
 sednaShowTime :: SednaConnection -> IO SednaResponseCode
 sednaShowTime = withSednaConnection c'SEshowTime
 
-sednaSetConnectionAttr :: SednaConnection -> SednaConnectionAttr -> IO SednaResponseCode
+sednaSetConnectionAttr :: SednaConnection -> SednaConnectionAttr -> IO SednaResponse
 sednaSetConnectionAttr = undefined
 
 sednaGetConnectionAttr :: SednaConnection -> SednaConnectionAttr -> IO SednaResponseCode
