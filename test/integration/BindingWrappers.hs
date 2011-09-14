@@ -1,0 +1,75 @@
+import Database.SednaDB.Internal.BindingWrappers
+import Database.SednaDB.Internal.SednaResponseCodes
+import Foreign
+import System.Cmd
+import Test.HUnit
+import IO
+import GHC.IO.Exception
+import System.Process
+
+
+bringUpDB :: IO ExitCode
+bringUpDB = do 
+              pid <- runCommand "se_gov"
+              waitForProcess pid 
+              pid2 <- runCommand "se_sm testdb"
+              waitForProcess pid2
+
+bringDownDB :: IO ExitCode
+bringDownDB = do 
+               pid <- runCommand "se_smsd testdb"
+               waitForProcess pid 
+               pid2 <- runCommand "se_stop"
+               waitForProcess pid2
+
+setup :: IO (SednaResponseCode, SednaConnection)
+setup = do 
+         bringUpDB
+         sednaConnect "localhost" "testdb" "SYSTEM" "MANAGER"
+
+tearDown = \(_, conn) -> 
+  do
+    free conn
+    bringDownDB
+
+sednaDBConnectionTest  :: ((SednaResponseCode, SednaConnection) -> IO c) -> IO c
+sednaDBConnectionTest = bracket setup tearDown
+
+connectionTest connFun msg succVal = TestCase $ sednaDBConnectionTest $
+    (\(resultCode, conn) -> do
+       result <- connFun $ conn          
+       assertEqual msg succVal result)
+
+testOpenConnection :: Test
+testOpenConnection = TestCase $
+                     do           
+                       (status, conn) <- setup
+                       result         <- assertEqual "Session opened successfully" 
+                                                     sessionOpen 
+                                                     status 
+                       tearDown(status, conn)
+                       return result
+
+testCloseConnection :: Test
+testCloseConnection =  connectionTest sednaCloseConnection  
+                                      "session Closed successfully" 
+                                      sessionClosed                                   
+                                      
+testBeginTransaction :: Test
+testBeginTransaction = 
+    TestCase $ sednaDBConnectionTest  
+                 (\(_,conn) ->
+                      do
+                        result <- sednaBegin conn          
+                        assertEqual "Begin transaction successful," 
+                                    beginTransactionSucceeded
+                                    result)
+                                                  
+connectionTests :: Test
+connectionTests  = TestList [testOpenConnection, testCloseConnection]
+
+transactionTests :: Test
+transactionTests = TestList [testBeginTransaction]
+
+main = do
+        runTestTT connectionTests

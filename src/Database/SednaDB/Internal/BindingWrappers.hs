@@ -21,7 +21,7 @@ data SednaResponse = SednaResponse { responseCode :: SednaResponseCode
                                    , result       :: ByteString 
                                    }  
 
-sednaConnect :: String -> String -> String -> String -> IO SednaConnection
+sednaConnect :: String -> String -> String -> String -> IO (SednaResponseCode, SednaConnection)
 sednaConnect url dbname login password  =  
     do
       conn      <- malloc --they say malloc is very expensive and I'm not rich
@@ -36,7 +36,7 @@ sednaConnect url dbname login password  =
                                cPassword
                                
       mapM_ free [cUrl,cDbname,cLogin,cPassword]
-      return conn
+      return (SednaResponseCode status, conn)
       
 withSednaConnection :: (SednaConnection ->  IO CInt) -> SednaConnection -> IO SednaResponseCode
 withSednaConnection sednaAction conn = 
