@@ -23,7 +23,8 @@ Library
   Default-Language:       Haskell98
   Build-Depends:          base == 4.*,
                           bindings-DSL,
-                          bytestring    
+                          bytestring,
+                          containers    
 
   Exposed-Modules:        Database.SednaDB.Internal.BindingWrappers
                           Database.SednaDB.Internal.Sedna
