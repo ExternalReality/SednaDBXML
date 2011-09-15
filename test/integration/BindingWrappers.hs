@@ -1,11 +1,14 @@
 import Database.SednaDB.Internal.BindingWrappers
 import Database.SednaDB.Internal.SednaResponseCodes
+import Database.SednaDB.Internal.SednaConnectionAttributes 
+
 import Foreign
-import System.Cmd
-import Test.HUnit
-import IO
 import GHC.IO.Exception
+import IO
+import System.Cmd
 import System.Process
+
+import Test.HUnit
 
 
 bringUpDB :: IO ExitCode
@@ -57,16 +60,26 @@ testCloseConnection =  connectionTest sednaCloseConnection
                                       
 testBeginTransaction :: Test
 testBeginTransaction = 
-    TestCase $ sednaDBConnectionTest  
-                 (\(_,conn) ->
-                      do
-                        result <- sednaBegin conn          
-                        assertEqual "Begin transaction successful," 
-                                    beginTransactionSucceeded
-                                    result)
+  TestCase $ sednaDBConnectionTest  
+               (\(_,conn) ->
+                 do
+                   result <- sednaBegin conn          
+                   assertEqual "Begin transaction successful," 
+                               beginTransactionSucceeded
+                               result)
+
+testSetConnectionAttr :: Test
+testSetConnectionAttr =
+  TestCase $ sednaDBConnectionTest
+               (\(_,conn) ->
+                 do
+                   result <- sednaSetConnectionAttr conn autoCommitOff
+                   assertEqual "Set attribute succeeded"
+                                setAttributeSucceeded
+                                result)                   
                                                   
 connectionTests :: Test
 connectionTests  = TestList [testOpenConnection, testCloseConnection]
 
 transactionTests :: Test
-transactionTests = TestList [testBeginTransaction]
+transactionTests = TestList [testBeginTransaction, testSetConnectionAttr]

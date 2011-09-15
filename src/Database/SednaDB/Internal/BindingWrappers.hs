@@ -1,6 +1,10 @@
 module Database.SednaDB.Internal.BindingWrappers where
 
 import Data.ByteString
+import Data.Maybe 
+
+import qualified Data.Map as DM (fromList, lookup)
+
 
 import Database.SednaDB.Internal.Sedna
 import Database.SednaDB.Internal.SednaConnectionAttributes 
@@ -108,8 +112,30 @@ sednaTransactionStatus = withSednaConnection c'SEtransactionStatus
 sednaShowTime :: SednaConnection -> IO SednaResponseCode
 sednaShowTime = withSednaConnection c'SEshowTime
 
-sednaSetConnectionAttr :: SednaConnection -> SednaConnectionAttr -> IO SednaResponse
-sednaSetConnectionAttr = undefined
+sednaConnectionAttributeMap :: SednaConnAttrValue -> Maybe SednaConnectionAttr
+sednaConnectionAttributeMap attr = DM.lookup attr attrValToAttrMap 
+    where 
+      attrValToAttrMap =  DM.fromList [ (autoCommitOff            , attrAutoCommit)                
+                                      , (autoCommitOn             , attrAutoCommit)             
+                                      , (readOnlyTransaction      , attrConcurrencyType)                          
+                                      , (updateTransaction        , attrConcurrencyType) 
+                                      , (debugOn                  , attrDebug)  
+                                      , (debugOff                 , attrDebug)  
+                                      , (logLess                  , attrLogAmount)
+                                      , (logFull                  , attrLogAmount)
+                                      , (boundarySpacePreserveOn  , attrBoundarySpacePreserveWhileLoad)
+                                      , (boundarySpacePreserveOff , attrBoundarySpacePreserveWhileLoad) 
+                                      ]
+                                                
+sednaSetConnectionAttr :: SednaConnection -> SednaConnAttrValue -> IO SednaResponseCode
+sednaSetConnectionAttr conn attrVal = alloca (\ptrAttrVal -> 
+                                                  do
+                                                    let connAttr = fromIntegral $ sednaConnectionAttr $ fromJust (sednaConnectionAttributeMap attrVal)
+                                                    let attr     = sednaConnAttrValue attrVal
+                                                    let size     = sizeOf attr
+                                                    poke ptrAttrVal attr                  
+                                                    result  <- c'SEsetConnectionAttr conn connAttr (castPtr ptrAttrVal) attr
+                                                    return $ SednaResponseCode result)
 
 sednaGetConnectionAttr :: SednaConnection -> SednaConnectionAttr -> IO SednaResponseCode
 sednaGetConnectionAttr = undefined
