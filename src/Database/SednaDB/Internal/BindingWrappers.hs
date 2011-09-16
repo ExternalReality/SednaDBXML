@@ -5,7 +5,6 @@ import Data.Maybe
 
 import qualified Data.Map as DM (fromList, lookup)
 
-
 import Database.SednaDB.Internal.Sedna
 import Database.SednaDB.Internal.SednaConnectionAttributes 
 import Database.SednaDB.Internal.SednaResponseCodes
@@ -130,16 +129,24 @@ sednaConnectionAttributeMap attr = DM.lookup attr attrValToAttrMap
 sednaSetConnectionAttr :: SednaConnection -> SednaConnAttrValue -> IO SednaResponseCode
 sednaSetConnectionAttr conn attrVal = alloca (\ptrAttrVal -> 
                                                   do
-                                                    let connAttr = fromIntegral $ sednaConnectionAttr $ fromJust (sednaConnectionAttributeMap attrVal)
+                                                    let connAttr = fromIntegral        $ 
+                                                                   sednaConnectionAttr $ 
+                                                                   fromJust (sednaConnectionAttributeMap attrVal)
                                                     let attr     = sednaConnAttrValue attrVal
                                                     let size     = sizeOf attr
                                                     poke ptrAttrVal attr                  
                                                     result  <- c'SEsetConnectionAttr conn connAttr (castPtr ptrAttrVal) attr
                                                     return $ SednaResponseCode result)
 
-sednaGetConnectionAttr :: SednaConnection -> SednaConnectionAttr -> IO SednaResponseCode
-sednaGetConnectionAttr = undefined
-
+sednaGetConnectionAttr :: SednaConnection -> SednaConnectionAttr -> IO (SednaResponseCode, SednaConnAttrValue)
+sednaGetConnectionAttr conn connAttr = alloca (\sizePtr ->
+                                                   do
+                                                     let attr = fromIntegral $ sednaConnectionAttr connAttr
+                                                     resultPtr  <- malloc :: IO (Ptr CInt)
+                                                     resultCode <- c'SEgetConnectionAttr conn attr (castPtr resultPtr) sizePtr
+                                                     result     <- peek (castPtr resultPtr)
+                                                     return (SednaResponseCode resultCode, SednaConnAttrValue result))
+                                                    
 sednaResetAllConnectionAttr :: SednaConnection -> IO SednaResponseCode
 sednaResetAllConnectionAttr = withSednaConnection c'SEresetAllConnectionAttr
 

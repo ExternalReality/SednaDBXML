@@ -10,7 +10,6 @@ import System.Process
 
 import Test.HUnit
 
-
 bringUpDB :: IO ExitCode
 bringUpDB = do 
               pid <- runCommand "se_gov"
@@ -77,9 +76,23 @@ testSetConnectionAttr =
                    assertEqual "Set attribute succeeded"
                                 setAttributeSucceeded
                                 result)                   
+               
+testGetConnectionAttr :: Test
+testGetConnectionAttr =
+  TestCase $ sednaDBConnectionTest
+   (\(_,conn) ->
+     do
+       (resultCode, result) <- sednaGetConnectionAttr conn attrAutoCommit
+       assertEqual "Get attribute succeeded"
+                   getAttributeSucceeded
+                   resultCode                   
+       assertEqual "Get attribute should get correct value"
+                   autoCommitOff
+                   result)
+          
                                                   
 connectionTests :: Test
-connectionTests  = TestList [testOpenConnection, testCloseConnection]
+connectionTests  = TestList [testOpenConnection, testCloseConnection, testGetConnectionAttr, testSetConnectionAttr]
 
 transactionTests :: Test
-transactionTests = TestList [testBeginTransaction, testSetConnectionAttr]
+transactionTests = TestList [testBeginTransaction]

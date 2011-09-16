@@ -78,7 +78,7 @@ import Database.SednaDB.Internal.SpDefs
 #ccall SEshowTime , Ptr <SednaConnection>  -> IO CInt
 
 #ccall SEsetConnectionAttr, Ptr <SednaConnection> -> CUInt -> Ptr () -> CInt -> IO CInt 
-#ccall SEgetConnectionAttr, Ptr <SednaConnection> -> CUInt -> Ptr () -> CInt -> IO CInt 
+#ccall SEgetConnectionAttr, Ptr <SednaConnection> -> CUInt -> Ptr () -> Ptr CInt -> IO CInt 
 
 #ccall SEresetAllConnectionAttr, Ptr <SednaConnection>  -> IO CInt
 

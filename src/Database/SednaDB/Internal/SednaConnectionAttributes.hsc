@@ -5,8 +5,8 @@ import Foreign.C.Types
 #include <libsedna.h>
 #include <sp_defs.h>
 
-newtype SednaConnectionAttr = SednaConnectionAttr { sednaConnectionAttr :: CInt } deriving(Eq, Ord)
-newtype SednaConnAttrValue  = SednaConnAttrValue  { sednaConnAttrValue  :: CInt } deriving(Eq, Ord)
+newtype SednaConnectionAttr = SednaConnectionAttr { sednaConnectionAttr :: CInt } deriving(Eq, Ord, Show)
+newtype SednaConnAttrValue  = SednaConnAttrValue  { sednaConnAttrValue  :: CInt } deriving(Eq, Ord, Show)
 
 #{enum SednaConnectionAttr, SednaConnectionAttr
  , attrAutoCommit                     = SEDNA_ATTR_AUTOCOMMIT
