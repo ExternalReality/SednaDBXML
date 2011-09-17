@@ -13,7 +13,7 @@ import Test.HUnit
 bringUpDB :: IO ExitCode
 bringUpDB = do 
               pid <- runCommand "se_gov"
-              waitForProcess pid 
+              waitForProcess pid2
               pid2 <- runCommand "se_sm testdb"
               waitForProcess pid2
 
