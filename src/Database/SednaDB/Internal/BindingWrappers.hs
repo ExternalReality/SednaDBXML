@@ -5,7 +5,7 @@ import Data.Maybe
 
 import qualified Data.Map as DM (fromList, lookup)
 
-import Database.SednaDB.Internal.Sedna
+import Database.SednaDB.Internal.SednaBindings
 import Database.SednaDB.Internal.SednaConnectionAttributes 
 import Database.SednaDB.Internal.SednaResponseCodes
 

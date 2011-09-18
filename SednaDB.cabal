@@ -27,7 +27,7 @@ Library
                           containers    
 
   Exposed-Modules:        Database.SednaDB.Internal.BindingWrappers
-                          Database.SednaDB.Internal.Sedna
+                          Database.SednaDB.Internal.SednaBindings
                           Database.SednaDB.Internal.SednaConnectionAttributes
                           Database.SednaDB.Internal.SednaResponseCodes
                           Database.SednaDB.Internal.SpDefs      
