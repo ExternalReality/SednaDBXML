@@ -2,7 +2,9 @@
 #include <sp_defs.h>
 
 module Database.SednaDB.Internal.SpDefs where
-#strict_import
+
+import Foreign
+import Foreign.C.Types
 
 #num  SEDNA_MAX_RESULT_SIZE
 

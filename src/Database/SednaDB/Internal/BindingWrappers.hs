@@ -10,7 +10,6 @@ import Database.SednaDB.Internal.SednaConnectionAttributes
 import Database.SednaDB.Internal.SednaResponseCodes
 
 import Foreign
-import Foreign.Ptr
 import Foreign.C.Types
 import Foreign.C.String
 
@@ -43,8 +42,8 @@ sednaConnect url dbname login password  =
 withSednaConnection :: (SednaConnection ->  IO CInt) -> SednaConnection -> IO SednaResponseCode
 withSednaConnection sednaAction conn = 
   do 
-    result <- sednaAction $ conn
-    return  $ SednaResponseCode result
+    response <- sednaAction $ conn
+    return  $ SednaResponseCode response
     
 sednaCloseConnection :: SednaConnection -> IO SednaResponseCode 
 sednaCloseConnection = withSednaConnection c'SEclose 
@@ -76,8 +75,8 @@ sednaGetData conn size = useAsCStringLen (replicate size 0) loadData
       let buff' = fst buff 
       let size' = fromIntegral (snd buff)
       resultCode <- fmap SednaResponseCode $ c'SEgetData conn buff' size'      
-      result     <- packCStringLen (buff', fromIntegral size')
-      return $ SednaResponse resultCode result 
+      response   <- packCStringLen (buff', fromIntegral size')
+      return $ SednaResponse resultCode response 
   
 sednaLoadData :: SednaConnection -> ByteString -> String -> String -> IO SednaResponseCode
 sednaLoadData conn buff docName colName = 
@@ -89,9 +88,9 @@ sednaLoadData conn buff docName colName =
           let bytes = fromIntegral $ snd s
           cDocName <- newCString docName
           cColName <- newCString colName
-          result   <- c'SEloadData conn buff' bytes cDocName cColName  
+          response <- c'SEloadData conn buff' bytes cDocName cColName  
           mapM_ free [cDocName, cColName]
-          return $ SednaResponseCode result
+          return $ SednaResponseCode response
                          
 sednaEndLoadData :: SednaConnection -> IO SednaResponseCode
 sednaEndLoadData = withSednaConnection c'SEendLoadData 
@@ -133,10 +132,10 @@ sednaSetConnectionAttr conn attrVal = alloca (\ptrAttrVal ->
                                                                    sednaConnectionAttr $ 
                                                                    fromJust (sednaConnectionAttributeMap attrVal)
                                                     let attr     = sednaConnAttrValue attrVal
-                                                    let size     = sizeOf attr
+                                                    let size     = fromIntegral $ sizeOf attr
                                                     poke ptrAttrVal attr                  
-                                                    result  <- c'SEsetConnectionAttr conn connAttr (castPtr ptrAttrVal) attr
-                                                    return $ SednaResponseCode result)
+                                                    response <- c'SEsetConnectionAttr conn connAttr (castPtr ptrAttrVal) size
+                                                    return $ SednaResponseCode response)
 
 sednaGetConnectionAttr :: SednaConnection -> SednaConnectionAttr -> IO (SednaResponseCode, SednaConnAttrValue)
 sednaGetConnectionAttr conn connAttr = alloca (\sizePtr ->
@@ -144,8 +143,8 @@ sednaGetConnectionAttr conn connAttr = alloca (\sizePtr ->
                                                      let attr = fromIntegral $ sednaConnectionAttr connAttr
                                                      resultPtr  <- malloc :: IO (Ptr CInt)
                                                      resultCode <- c'SEgetConnectionAttr conn attr (castPtr resultPtr) sizePtr
-                                                     result     <- peek (castPtr resultPtr)
-                                                     return (SednaResponseCode resultCode, SednaConnAttrValue result))
+                                                     response   <- peek (castPtr resultPtr)
+                                                     return (SednaResponseCode resultCode, SednaConnAttrValue response))
                                                     
 sednaResetAllConnectionAttr :: SednaConnection -> IO SednaResponseCode
 sednaResetAllConnectionAttr = withSednaConnection c'SEresetAllConnectionAttr

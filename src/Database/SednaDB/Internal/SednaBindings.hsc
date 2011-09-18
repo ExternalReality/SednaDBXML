@@ -1,8 +1,14 @@
 #include <bindings.dsl.h>
 #include <libsedna.h>
 
-module Database.SednaDB.Internal.Sedna where
-#strict_import
+module Database.SednaDB.Internal.SednaBindings where
+
+
+import Foreign
+import Foreign.C.Types
+import Foreign.C.String
+
+
 
 import Database.SednaDB.Internal.SpDefs
 
