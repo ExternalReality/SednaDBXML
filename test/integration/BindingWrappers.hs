@@ -13,7 +13,7 @@ import Test.HUnit
 bringUpDB :: IO ExitCode
 bringUpDB = do 
               pid <- runCommand "se_gov"
-              waitForProcess pid2
+              waitForProcess pid
               pid2 <- runCommand "se_sm testdb"
               waitForProcess pid2
 
@@ -89,8 +89,7 @@ testGetConnectionAttr =
        assertEqual "Get attribute should get correct value"
                    autoCommitOff
                    result)
-          
-                                                  
+                                                            
 connectionTests :: Test
 connectionTests  = TestList [testOpenConnection, testCloseConnection, testGetConnectionAttr, testSetConnectionAttr]
 
