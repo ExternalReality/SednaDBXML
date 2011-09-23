@@ -1,45 +1,57 @@
 module Database.SednaDB.Sedna where
 
-import Control.Monad.Identity 
-import Control.Monad.Error
-import Control.Monad.Writer
-import Control.Monad.State
-import Control.Monad.Reader
+import Control.Monad.IO.Class
 
-import Data.ByteString hiding (head)
-import Data.Enumerator
+import Data.ByteString.Char8
+import Data.Iteratee as I
+import Data.Iteratee.IO
 
---iriscouch.com
---couchbase.com
---cloudant.com
---couchdb.apache.org
+import Foreign
+import Foreign.C.Types
+import Foreign.C.String
+
+import Data.Iteratee.Char as C
+
+import Database.SednaDB.Internal.SednaBindings
+import Database.SednaDB.Internal.SednaConnectionAttributes 
+import Database.SednaDB.Internal.SednaResponseCodes
 
 import Data.Maybe (fromJust)
 
-import Prelude hiding (head, concat)
-
 import Database.SednaDB.Internal.BindingWrappers
+import Database.SednaDB.Internal.SednaResponseCodes
 
-type SednaTransaction a = ReaderT String (ErrorT String (WriterT [String] (StateT SednaConnection IO))) a 
-                           
--- sednaLoadXMLData:: (MonadState s m) => String -> String -> Iteratee ByteString m () 
--- sednaLoadXMLData coll doc = do
---   chunk  <- head
---   conn   <- get
---   case chunk of
---     Nothing   -> return ()
---     Just buff -> do 
---       response <- returnI $ sednaLoadData conn (fromJust chunk) coll doc
---       sednaLoadXMLData coll doc
-      
-sednaLoadXMLData :: SednaConnection -> String -> String -> Step ByteString IO ()
-sednaLoadXMLData conn coll doc = Continue $ go conn coll doc
-  where
-    go :: SednaConnection -> String -> String -> Stream ByteString -> Iteratee ByteString IO ()
-    go conn coll doc (Chunks bytes) = do 
-      let m = sednaLoadData conn (concat bytes) coll doc
-      continue $ go conn coll doc
-   
-    go conn coll doc EOF = yield () EOF
+loadXMLBytes  :: MonadIO m => 
+                 SednaConnection -> String -> String -> Iteratee ByteString m ()
+loadXMLBytes conn doc coll =  liftIO (sednaBegin conn) >> liftI step
+  where 
+    step s@(I.Chunk xs) 
+      | xs == (pack "") = liftI step
+      | otherwise = do 
+        response <- liftIO $ sednaLoadData conn xs doc coll
+        if response == dataChunkLoaded 
+          then liftIO (print s) >>  liftI step
+          else error $ "something bad happened" ++ (show s)
+        
+    step stream = do
+      response <- liftIO $ sednaEndLoadData conn 
+      if response == bulkLoadSucceeded
+        then liftIO  (sendaCommit conn) >> idone () stream
+        else error "the bulk load did not succeed"
+    
+loadXMLFile conn file doc coll = do 
+  iteratee <- enumFile 8 file $ loadXMLBytes conn doc coll  
+  run iteratee
+    
+loadData = do
+  conn <- sednaConnect "localhost" "testdb" "SYSTEM" "MANAGER"
+  if (fst conn) == sessionOpen 
+       then  print "sessionOpen"
+       else  error "connectionFailed"
+  
+  loadXMLFile (snd conn) 
+              "/home/objectivity/dev/SednaDB-Haskell/test/fixtures/baseballleague.xml"
+              "test2"
+              "testcollection"
 
 
