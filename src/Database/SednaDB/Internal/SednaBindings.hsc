@@ -71,10 +71,10 @@ import Database.SednaDB.Internal.SpDefs
 --------------------------------------------------------------------------------
 
 #ccall SEconnect,  Ptr <SednaConnection> -> CString -> CString -> CString -> CString -> IO CInt
+#ccall SEclose,    Ptr <SednaConnection> -> IO CInt
 
 --------------------------------------------------------------------------------
 
-#ccall SEclose,    Ptr <SednaConnection> -> IO CInt
 #ccall SEbegin,    Ptr <SednaConnection> -> IO CInt
 #ccall SErollback, Ptr <SednaConnection> -> IO CInt
 #ccall SEcommit,   Ptr <SednaConnection> -> IO CInt
