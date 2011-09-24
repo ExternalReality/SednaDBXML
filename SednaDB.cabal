@@ -24,7 +24,9 @@ Library
   Build-Depends:          base == 4.*,
                           bindings-DSL,
                           bytestring,
-                          containers    
+                          containers,
+                          iteratee == 0.8.*,
+                          mtl  
 
   Exposed-Modules:        Database.SednaDB.Internal.BindingWrappers
                           Database.SednaDB.Internal.SednaBindings

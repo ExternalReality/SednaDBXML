@@ -1,16 +1,19 @@
 module Database.SednaDB.Internal.BindingWrappers where
 
-import Control.Monad.IO.Class
+--------------------------------------------------------------------------------
+
+import Control.Monad.Trans
 import Data.ByteString as BS
 import Data.ByteString.Char8 as C (pack)
-import Data.Iteratee as I hiding (mapM_, peek)
-import Data.Iteratee.IO
 import Data.Maybe 
 import Foreign
 import Foreign.C.String
 import Foreign.C.Types
 import Prelude hiding (replicate)
 import qualified Data.Map as DM (fromList, lookup)
+
+import Data.Iteratee as I hiding (mapM_, peek)
+import Data.Iteratee.IO
 
 import Database.SednaDB.Internal.SednaBindings
 import Database.SednaDB.Internal.SednaConnectionAttributes 
@@ -21,14 +24,11 @@ import Database.SednaDB.Internal.SednaResponseCodes
 type SednaConnection = Ptr C'SednaConnection
 type DebugHandler    = C'debug_handler_t
 
+--------------------------------------------------------------------------------
+
 data SednaResponse = SednaResponse { responseCode :: SednaResponseCode
                                    , result       :: ByteString 
                                    }
-                     
---------------------------------------------------------------------------------                     
-
-xmlChunkSize :: Integral a => a
-xmlChunkSize = 8   
 
 --------------------------------------------------------------------------------
 
@@ -39,7 +39,7 @@ sednaConnect :: String
                 -> IO (SednaResponseCode, SednaConnection)
 sednaConnect url dbname login password  =  
   do
-    conn      <- malloc --they say malloc is very expensive and I'm not rich
+    conn      <- malloc
     cUrl      <- newCString url 
     cDbname   <- newCString dbname 
     cLogin    <- newCString login
@@ -122,9 +122,8 @@ sednaLoadData :: SednaConnection
                  -> String 
                  -> String 
                  -> IO SednaResponseCode
-sednaLoadData conn buff docName colName = 
-  do
-    useAsCStringLen buff loadData 
+sednaLoadData conn buff docName colName = do
+  useAsCStringLen buff loadData 
       where
         loadData s = do
           let buff' = fst s
@@ -142,8 +141,10 @@ sednaEndLoadData = withSednaConnection c'SEendLoadData
 
 --------------------------------------------------------------------------------
 
-loadXMLBytes  :: MonadIO m => 
-                 SednaConnection -> String -> String -> Iteratee ByteString m ()
+loadXMLBytes:: MonadIO m => SednaConnection 
+            -> String  
+            -> String 
+            -> Iteratee ByteString m ()
 loadXMLBytes conn doc coll =  liftIO (sednaBegin conn) >> liftI step
   where 
     step s@(I.Chunk xs) 
@@ -162,6 +163,7 @@ loadXMLBytes conn doc coll =  liftIO (sednaBegin conn) >> liftI step
              
 --------------------------------------------------------------------------------
     
+loadXMLFile :: SednaConnection -> String -> String -> String -> IO ()       
 loadXMLFile conn file doc coll = do 
   iteratee <- enumFile 8 file $ loadXMLBytes conn doc coll  
   run iteratee
@@ -238,7 +240,10 @@ sednaGetConnectionAttr conn connAttr =
   alloca (\sizePtr -> do
              let attr = fromIntegral $ sednaConnectionAttr connAttr
              resultPtr  <- malloc :: IO (Ptr CInt)
-             resultCode <- c'SEgetConnectionAttr conn attr (castPtr resultPtr) sizePtr
+             resultCode <- c'SEgetConnectionAttr conn 
+                                                 attr 
+                                                 (castPtr resultPtr) 
+                                                 sizePtr
              response   <- peek (castPtr resultPtr)
              return (SednaResponseCode resultCode, SednaConnAttrValue response))
                                        
