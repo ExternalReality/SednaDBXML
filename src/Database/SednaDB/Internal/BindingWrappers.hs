@@ -3,6 +3,7 @@ module Database.SednaDB.Internal.BindingWrappers where
 --------------------------------------------------------------------------------
 
 import Control.Monad.Trans
+import Control.Exception
 import Data.ByteString as BS
 import Data.ByteString.Char8 as C (pack)
 import Data.Maybe 
@@ -18,6 +19,7 @@ import Data.Iteratee.IO
 import Database.SednaDB.Internal.SednaBindings
 import Database.SednaDB.Internal.SednaConnectionAttributes 
 import Database.SednaDB.Internal.SednaResponseCodes
+import Database.SednaDB.Internal.SednaExceptions
 
 --------------------------------------------------------------------------------
 
@@ -26,17 +28,11 @@ type DebugHandler    = C'debug_handler_t
 
 --------------------------------------------------------------------------------
 
-data SednaResponse = SednaResponse { responseCode :: SednaResponseCode
-                                   , result       :: ByteString 
-                                   }
-
---------------------------------------------------------------------------------
-
 sednaConnect :: String 
-                -> String 
-                -> String 
-                -> String 
-                -> IO (SednaResponseCode, SednaConnection)
+             -> String 
+             -> String 
+             -> String 
+             -> IO (SednaResponseCode, SednaConnection)
 sednaConnect url dbname login password  =  
   do
     conn      <- malloc
@@ -86,9 +82,9 @@ sendaCommit = withSednaConnection c'SEcommit
 --------------------------------------------------------------------------------
 
 sednaExecuteAction :: (SednaConnection -> CString -> IO CInt) 
-                      -> SednaConnection 
-                      -> String 
-                      -> IO SednaResponseCode 
+                   -> SednaConnection 
+                   -> String 
+                   -> IO SednaResponseCode 
 sednaExecuteAction sednaQueryAction conn query = do 
   resultCode <- withCString query $ sednaQueryAction conn
   return $ SednaResponseCode resultCode
@@ -105,7 +101,7 @@ sednaExecute = sednaExecuteAction c'SEexecute
 
 --------------------------------------------------------------------------------
 
-sednaGetData :: SednaConnection -> Int -> IO SednaResponse
+sednaGetData :: SednaConnection -> Int -> IO (SednaResponseCode, ByteString)
 sednaGetData conn size = useAsCStringLen (BS.replicate size 0) loadData
   where
     loadData buff = do
@@ -113,15 +109,15 @@ sednaGetData conn size = useAsCStringLen (BS.replicate size 0) loadData
       let size' = fromIntegral (snd buff)
       resultCode <- fmap SednaResponseCode $ c'SEgetData conn buff' size'      
       response   <- packCStringLen (buff', fromIntegral size')
-      return $ SednaResponse resultCode response 
+      return $ (resultCode, response)
   
 --------------------------------------------------------------------------------
       
 sednaLoadData :: SednaConnection 
-                 -> ByteString 
-                 -> String 
-                 -> String 
-                 -> IO SednaResponseCode
+              -> ByteString 
+              -> String 
+              -> String 
+              -> IO SednaResponseCode
 sednaLoadData conn buff docName colName = do
   useAsCStringLen buff loadData 
       where
@@ -153,13 +149,13 @@ loadXMLBytes conn doc coll =  liftIO (sednaBegin conn) >> liftI step
         response <- liftIO $ sednaLoadData conn xs doc coll
         if response == dataChunkLoaded 
           then liftIO (print s) >>  liftI step
-          else error $ "something bad happened" ++ (show s)
+          else throw SednaFailedException
         
     step stream = do
       response <- liftIO $ sednaEndLoadData conn 
       if response == bulkLoadSucceeded
         then liftIO  (sendaCommit conn) >> idone () stream
-        else error "the bulk load did not succeed"
+        else throw SednaBulkLoadFailedException
              
 --------------------------------------------------------------------------------
     

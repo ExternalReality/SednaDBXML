@@ -1,14 +1,18 @@
-import Database.SednaDB.Internal.BindingWrappers
-import Database.SednaDB.Internal.SednaResponseCodes
-import Database.SednaDB.Internal.SednaConnectionAttributes 
+module Test.Integration.BindingsWrappers where
 
-import Foreign
-import GHC.IO.Exception
-import IO
-import System.Cmd
-import System.Process
+import Control.Exception       (bracket)
+import Data.ByteString.Char8   (pack)
+import Foreign                 (free)
+import System.Exit             (ExitCode)
+import System.Process          (runCommand, waitForProcess)
 
 import Test.HUnit
+
+import Database.SednaDB.Internal.BindingWrappers
+import Database.SednaDB.Internal.SednaConnectionAttributes 
+import Database.SednaDB.Internal.SednaResponseCodes
+
+--------------------------------------------------------------------------------
 
 bringUpDB :: IO ExitCode
 bringUpDB = do 
@@ -17,12 +21,16 @@ bringUpDB = do
               pid2 <- runCommand "se_sm testdb"
               waitForProcess pid2
 
+--------------------------------------------------------------------------------
+
 bringDownDB :: IO ExitCode
 bringDownDB = do 
                pid <- runCommand "se_smsd testdb"
                waitForProcess pid 
                pid2 <- runCommand "se_stop"
                waitForProcess pid2
+
+--------------------------------------------------------------------------------
 
 setup :: IO (SednaResponseCode, SednaConnection)
 setup = do 
@@ -34,13 +42,19 @@ tearDown = \(_, conn) ->
     free conn
     bringDownDB
 
-sednaDBConnectionTest  :: ((SednaResponseCode, SednaConnection) -> IO c) -> IO c
-sednaDBConnectionTest = bracket setup tearDown
+--------------------------------------------------------------------------------
 
-connectionTest connFun msg succVal = TestCase $ sednaDBConnectionTest $
+sednaDBTest  :: ((SednaResponseCode, SednaConnection) -> IO c) -> IO c
+sednaDBTest = bracket setup tearDown
+
+--------------------------------------------------------------------------------
+
+connectionTest connFun msg succVal = TestCase $ sednaDBTest $
     (\(resultCode, conn) -> do
        result <- connFun $ conn          
        assertEqual msg succVal result)
+
+--------------------------------------------------------------------------------
 
 testOpenConnection :: Test
 testOpenConnection = TestCase $
@@ -52,14 +66,18 @@ testOpenConnection = TestCase $
                        tearDown(status, conn)
                        return result
 
+--------------------------------------------------------------------------------
+
 testCloseConnection :: Test
 testCloseConnection =  connectionTest sednaCloseConnection  
                                       "session Closed successfully" 
-                                      sessionClosed                                   
+                                      sessionClosed
+
+--------------------------------------------------------------------------------                                   
                                       
 testBeginTransaction :: Test
 testBeginTransaction = 
-  TestCase $ sednaDBConnectionTest  
+  TestCase $ sednaDBTest  
                (\(_,conn) ->
                  do
                    result <- sednaBegin conn          
@@ -67,19 +85,23 @@ testBeginTransaction =
                                beginTransactionSucceeded
                                result)
 
+--------------------------------------------------------------------------------
+
 testSetConnectionAttr :: Test
 testSetConnectionAttr =
-  TestCase $ sednaDBConnectionTest
+  TestCase $ sednaDBTest
                (\(_,conn) ->
                  do
                    result <- sednaSetConnectionAttr conn autoCommitOff
                    assertEqual "Set attribute succeeded"
                                 setAttributeSucceeded
                                 result)                   
+
+--------------------------------------------------------------------------------
                
 testGetConnectionAttr :: Test
 testGetConnectionAttr =
-  TestCase $ sednaDBConnectionTest
+  TestCase $ sednaDBTest
    (\(_,conn) ->
      do
        (resultCode, result) <- sednaGetConnectionAttr conn attrAutoCommit
@@ -89,9 +111,27 @@ testGetConnectionAttr =
        assertEqual "Get attribute should get correct value"
                    autoCommitOff
                    result)
+
+
+--------------------------------------------------------------------------------
+
+testLoadData =
+ TestCase $ sednaDBTest
+   (\(_,conn) -> do
+      sednaBegin conn
+      resultCode <- sednaLoadData conn 
+                    (pack "<?xml version=\"1.0\" standalone=\"yes\"?>") 
+                    "testdoc" 
+                    "testcollection"
+      sednaEndLoadData conn
+      assertEqual "Should Successfully chunk of XML"
+                  dataChunkLoaded
+                  resultCode)
+                   
+--------------------------------------------------------------------------------
                                                             
 connectionTests :: Test
 connectionTests  = TestList [testOpenConnection, testCloseConnection, testGetConnectionAttr, testSetConnectionAttr]
 
 transactionTests :: Test
-transactionTests = TestList [testBeginTransaction]
+transactionTests = TestList [testBeginTransaction, testLoadData]

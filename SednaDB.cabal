@@ -31,6 +31,7 @@ Library
   Exposed-Modules:        Database.SednaDB.Internal.BindingWrappers
                           Database.SednaDB.Internal.SednaBindings
                           Database.SednaDB.Internal.SednaConnectionAttributes
+                          Database.SednaDB.Internal.SednaExceptions
                           Database.SednaDB.Internal.SednaResponseCodes
                           Database.SednaDB.Internal.SpDefs      
   
