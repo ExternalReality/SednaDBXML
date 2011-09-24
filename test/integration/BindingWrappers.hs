@@ -1,10 +1,12 @@
 module Test.Integration.BindingsWrappers where
 
+--------------------------------------------------------------------------------
+
 import Control.Exception       (bracket)
 import Data.ByteString.Char8   (pack)
 import Foreign                 (free)
 import System.Exit             (ExitCode)
-import System.Process          (runCommand, waitForProcess)
+import System.Process          (runCommand, waitForProcess, readProcess)
 
 import Test.HUnit
 
@@ -14,21 +16,15 @@ import Database.SednaDB.Internal.SednaResponseCodes
 
 --------------------------------------------------------------------------------
 
-bringUpDB :: IO ExitCode
 bringUpDB = do 
-              pid <- runCommand "se_gov"
-              waitForProcess pid
-              pid2 <- runCommand "se_sm testdb"
-              waitForProcess pid2
-
+              readProcess "se_gov" [] "/dev/null"
+              readProcess "se_sm" ["testdb"] "/dev/null"
+              
 --------------------------------------------------------------------------------
 
-bringDownDB :: IO ExitCode
 bringDownDB = do 
-               pid <- runCommand "se_smsd testdb"
-               waitForProcess pid 
-               pid2 <- runCommand "se_stop"
-               waitForProcess pid2
+               readProcess "se_smsd" ["testdb"] "/dev/null"
+               readProcess "se_stop" [] "/dev/null"
 
 --------------------------------------------------------------------------------
 
@@ -60,7 +56,7 @@ testOpenConnection :: Test
 testOpenConnection = TestCase $
                      do           
                        (status, conn) <- setup
-                       result         <- assertEqual "Session opened successfully" 
+                       result         <- assertEqual "Testing connection intialization." 
                                                      sessionOpen 
                                                      status 
                        tearDown(status, conn)
@@ -70,7 +66,7 @@ testOpenConnection = TestCase $
 
 testCloseConnection :: Test
 testCloseConnection =  connectionTest sednaCloseConnection  
-                                      "session Closed successfully" 
+                                      "Testing connection closure." 
                                       sessionClosed
 
 --------------------------------------------------------------------------------                                   
@@ -81,7 +77,7 @@ testBeginTransaction =
                (\(_,conn) ->
                  do
                    result <- sednaBegin conn          
-                   assertEqual "Begin transaction successful," 
+                   assertEqual "Testing transaction initialization." 
                                beginTransactionSucceeded
                                result)
 
@@ -93,7 +89,7 @@ testSetConnectionAttr =
                (\(_,conn) ->
                  do
                    result <- sednaSetConnectionAttr conn autoCommitOff
-                   assertEqual "Set attribute succeeded"
+                   assertEqual "Testing set attriubute value funtionality."
                                 setAttributeSucceeded
                                 result)                   
 
@@ -108,10 +104,9 @@ testGetConnectionAttr =
        assertEqual "Get attribute succeeded"
                    getAttributeSucceeded
                    resultCode                   
-       assertEqual "Get attribute should get correct value"
+       assertEqual "Testing attribute value response."
                    autoCommitOff
                    result)
-
 
 --------------------------------------------------------------------------------
 
@@ -124,14 +119,14 @@ testLoadData =
                     "testdoc" 
                     "testcollection"
       sednaEndLoadData conn
-      assertEqual "Should Successfully chunk of XML"
+      assertEqual "Testing proper loading of chunk data."
                   dataChunkLoaded
                   resultCode)
                    
 --------------------------------------------------------------------------------
                                                             
 connectionTests :: Test
-connectionTests  = TestList [testOpenConnection, testCloseConnection, testGetConnectionAttr, testSetConnectionAttr]
+connectionTests = TestList [testOpenConnection, testCloseConnection, testGetConnectionAttr, testSetConnectionAttr]
 
 transactionTests :: Test
 transactionTests = TestList [testBeginTransaction, testLoadData]

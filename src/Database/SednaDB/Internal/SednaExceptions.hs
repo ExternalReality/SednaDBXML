@@ -9,9 +9,6 @@ module Database.SednaDB.Internal.SednaExceptions where
 import Control.Exception
 import Data.Typeable
 
-import Database.SednaDB.Internal.SednaBindings
-import Database.SednaDB.Internal.SednaResponseCodes
-
 --------------------------------------------------------------------------------
 
 data SednaException =
