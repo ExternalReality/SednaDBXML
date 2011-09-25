@@ -47,7 +47,7 @@ sednaConnect url dbname login password  =
                              cPassword
                                
     mapM_ free [cUrl,cDbname,cLogin,cPassword]
-    return (SednaResponseCode status, conn)
+    return (fromCConstant status, conn)
       
 --------------------------------------------------------------------------------
 
@@ -57,7 +57,7 @@ withSednaConnection :: (SednaConnection ->  IO CInt)
 withSednaConnection sednaAction conn = 
   do 
     response <- sednaAction $ conn
-    return  $ SednaResponseCode response
+    return  $ fromCConstant response
 
 --------------------------------------------------------------------------------
     
@@ -87,7 +87,7 @@ sednaExecuteAction :: (SednaConnection -> CString -> IO CInt)
                    -> IO SednaResponseCode 
 sednaExecuteAction sednaQueryAction conn query = do 
   resultCode <- withCString query $ sednaQueryAction conn
-  return $ SednaResponseCode resultCode
+  return $ fromCConstant resultCode
   
 --------------------------------------------------------------------------------
   
@@ -107,10 +107,16 @@ sednaGetData conn size = useAsCStringLen (BS.replicate size 0) loadData
     loadData buff = do
       let buff' = fst buff 
       let size' = fromIntegral (snd buff)
-      resultCode <- fmap SednaResponseCode $ c'SEgetData conn buff' size'      
+      resultCode <- fmap fromCConstant $ c'SEgetData conn buff' size'      
       response   <- packCStringLen (buff', fromIntegral size')
       return $ (resultCode, response)
-  
+
+--------------------------------------------------------------------------------
+
+sednaGetBytes conn size = do 
+  (responseCode, chunk) <- liftIO $ sednaGetData conn size 
+  enumChunk $ Chunk chunk             
+
 --------------------------------------------------------------------------------
       
 sednaLoadData :: SednaConnection 
@@ -128,7 +134,7 @@ sednaLoadData conn buff docName colName = do
           cColName <- newCString colName
           response <- c'SEloadData conn buff' bytes cDocName cColName  
           mapM_ free [cDocName, cColName]
-          return $ SednaResponseCode response
+          return $ fromCConstant response
                          
 --------------------------------------------------------------------------------
           
@@ -147,15 +153,16 @@ loadXMLBytes conn doc coll =  liftIO (sednaBegin conn) >> liftI step
       | xs == (C.pack "") = liftI step
       | otherwise = do 
         response <- liftIO $ sednaLoadData conn xs doc coll
-        if response == dataChunkLoaded 
+        if response == DataChunkLoaded 
           then liftIO (print s) >>  liftI step
           else throw SednaFailedException
         
     step stream = do
       response <- liftIO $ sednaEndLoadData conn 
-      if response == bulkLoadSucceeded
-        then liftIO  (sendaCommit conn) >> idone () stream
-        else throw SednaBulkLoadFailedException
+      case response of
+         BulkLoadSucceeded -> liftIO  (sendaCommit conn) >> idone () stream
+         BulkLoadFailed    -> throw SednaBulkLoadFailedException
+         _                 -> throw SednaFailedException
              
 --------------------------------------------------------------------------------
     
@@ -225,7 +232,7 @@ sednaSetConnectionAttr conn attrVal =
                          connAttr 
                          (castPtr ptrAttrVal) 
                          size
-             return $ SednaResponseCode response)
+             return $ fromCConstant response)
                                       
 --------------------------------------------------------------------------------
 
@@ -241,7 +248,7 @@ sednaGetConnectionAttr conn connAttr =
                                                  (castPtr resultPtr) 
                                                  sizePtr
              response   <- peek (castPtr resultPtr)
-             return (SednaResponseCode resultCode, SednaConnAttrValue response))
+             return (fromCConstant resultCode, SednaConnAttrValue response))
                                        
 --------------------------------------------------------------------------------
                                                     

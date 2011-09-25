@@ -44,7 +44,11 @@ sednaDBTest  :: ((SednaResponseCode, SednaConnection) -> IO c) -> IO c
 sednaDBTest = bracket setup tearDown
 
 --------------------------------------------------------------------------------
+-- connectionTest is a helper funtion that encapsulates the simple case of a 
+-- a sedna function that accepts a connection and returns a value to be checked
+-- against a succes value. 
 
+connectionTest :: (Show a, Eq a) => (SednaConnection -> IO a) -> String -> a -> Test
 connectionTest connFun msg succVal = TestCase $ sednaDBTest $
     (\(resultCode, conn) -> do
        result <- connFun $ conn          
@@ -57,7 +61,7 @@ testOpenConnection = TestCase $
                      do           
                        (status, conn) <- setup
                        result         <- assertEqual "Testing connection intialization." 
-                                                     sessionOpen 
+                                                     SessionOpen 
                                                      status 
                        tearDown(status, conn)
                        return result
@@ -67,19 +71,14 @@ testOpenConnection = TestCase $
 testCloseConnection :: Test
 testCloseConnection =  connectionTest sednaCloseConnection  
                                       "Testing connection closure." 
-                                      sessionClosed
+                                       SessionClosed
 
 --------------------------------------------------------------------------------                                   
                                       
 testBeginTransaction :: Test
-testBeginTransaction = 
-  TestCase $ sednaDBTest  
-               (\(_,conn) ->
-                 do
-                   result <- sednaBegin conn          
-                   assertEqual "Testing transaction initialization." 
-                               beginTransactionSucceeded
-                               result)
+testBeginTransaction = connectionTest sednaBegin
+                                      "Testing transaction initialization." 
+                                      BeginTransactionSucceeded
 
 --------------------------------------------------------------------------------
 
@@ -90,7 +89,7 @@ testSetConnectionAttr =
                  do
                    result <- sednaSetConnectionAttr conn autoCommitOff
                    assertEqual "Testing set attriubute value funtionality."
-                                setAttributeSucceeded
+                                SetAttributeSucceeded
                                 result)                   
 
 --------------------------------------------------------------------------------
@@ -102,7 +101,7 @@ testGetConnectionAttr =
      do
        (resultCode, result) <- sednaGetConnectionAttr conn attrAutoCommit
        assertEqual "Get attribute succeeded"
-                   getAttributeSucceeded
+                   GetAttributeSucceeded
                    resultCode                   
        assertEqual "Testing attribute value response."
                    autoCommitOff
@@ -120,13 +119,16 @@ testLoadData =
                     "testcollection"
       sednaEndLoadData conn
       assertEqual "Testing proper loading of chunk data."
-                  dataChunkLoaded
+                  DataChunkLoaded
                   resultCode)
                    
 --------------------------------------------------------------------------------
                                                             
 connectionTests :: Test
-connectionTests = TestList [testOpenConnection, testCloseConnection, testGetConnectionAttr, testSetConnectionAttr]
+connectionTests = TestList [testOpenConnection, testCloseConnection]
+
+controlTests :: Test
+controlTests = TestList [testGetConnectionAttr, testSetConnectionAttr]
 
 transactionTests :: Test
 transactionTests = TestList [testBeginTransaction, testLoadData]

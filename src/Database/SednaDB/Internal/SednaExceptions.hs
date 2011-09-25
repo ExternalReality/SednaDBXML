@@ -160,7 +160,7 @@ instance Exception SednaCommitTransactionFailedException  where
     toException   = sednaTransactionExceptionToException
     fromException = sednaTransactionExceptionFromException    
 
--------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 data SednaRollBackTransactionFailedException = 
     SednaRollBackTransactionFailedException 
