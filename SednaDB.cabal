@@ -25,7 +25,7 @@ Library
                           bindings-DSL,
                           bytestring,
                           containers,
-                          iteratee == 0.8.*,
+                          iteratee >= 0.8,
                           mtl  
 
   Exposed-Modules:        Database.SednaDB.Internal.BindingWrappers
@@ -46,6 +46,10 @@ Library
                                                         
   Default-Extensions:     CPP,
                           ForeignFunctionInterface
+
+Source-Repository Head  
+    type:                 git
+    location:             git@github.com:ExternalReality/SednaDBXML.git
 
 
 

@@ -50,7 +50,7 @@ sednaDBTest = bracket setup tearDown
 
 connectionTest :: (Show a, Eq a) => (SednaConnection -> IO a) -> String -> a -> Test
 connectionTest connFun msg succVal = TestCase $ sednaDBTest $
-    (\(resultCode, conn) -> do
+    (\(_ , conn) -> do
        result <- connFun $ conn          
        assertEqual msg succVal result)
 
@@ -109,6 +109,7 @@ testGetConnectionAttr =
 
 --------------------------------------------------------------------------------
 
+testLoadData :: Test
 testLoadData =
  TestCase $ sednaDBTest
    (\(_,conn) -> do
@@ -121,7 +122,15 @@ testLoadData =
       assertEqual "Testing proper loading of chunk data."
                   DataChunkLoaded
                   resultCode)
-                   
+
+--------------------------------------------------------------------------------
+
+testLoadFile = sednaDBTest $ (\(_,conn) -> do
+                                loadXMLFile conn
+                                            "test/fixtures/baseballleague.xml"
+                                            "testdoc3"
+                                            "testcollection")
+                      
 --------------------------------------------------------------------------------
                                                             
 connectionTests :: Test

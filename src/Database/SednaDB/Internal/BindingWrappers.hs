@@ -2,19 +2,22 @@ module Database.SednaDB.Internal.BindingWrappers where
 
 --------------------------------------------------------------------------------
 
-import Control.Monad.Trans
 import Control.Exception
+import Control.Monad.Trans
+
 import Data.ByteString as BS
-import Data.ByteString.Char8 as C (pack)
+import Data.ByteString.Char8 as C (pack,unpack,concat)
+import Data.Iteratee as I hiding (mapM_, peek)
+import Data.Iteratee.IO
 import Data.Maybe 
+
+import qualified Data.Map as DM (fromList, lookup)
+
 import Foreign
 import Foreign.C.String
 import Foreign.C.Types
-import Prelude hiding (replicate)
-import qualified Data.Map as DM (fromList, lookup)
 
-import Data.Iteratee as I hiding (mapM_, peek)
-import Data.Iteratee.IO
+import Prelude hiding (replicate,concat)
 
 import Database.SednaDB.Internal.SednaBindings
 import Database.SednaDB.Internal.SednaConnectionAttributes 
@@ -99,24 +102,67 @@ sednaExecuteLong = sednaExecuteAction c'SEexecuteLong
 sednaExecute :: SednaConnection -> String -> IO SednaResponseCode
 sednaExecute = sednaExecuteAction c'SEexecute
 
---------------------------------------------------------------------------------
-
+--------------------------------------------------------------------------------  
 sednaGetData :: SednaConnection -> Int -> IO (SednaResponseCode, ByteString)
 sednaGetData conn size = useAsCStringLen (BS.replicate size 0) loadData
   where
-    loadData buff = do
-      let buff' = fst buff 
-      let size' = fromIntegral (snd buff)
-      resultCode <- fmap fromCConstant $ c'SEgetData conn buff' size'      
-      response   <- packCStringLen (buff', fromIntegral size')
-      return $ (resultCode, response)
+    loadData bufferLengthPair = do
+      let buff  = fst bufferLengthPair
+      let size' = fromIntegral (snd bufferLengthPair)
+
+      numOfBytesRead  <- c'SEgetData conn buff size'
+      response        <- return $ getResponse numOfBytesRead size'
+      bytes           <- packCStringLen (buff, fromIntegral numOfBytesRead)
+     
+      return $ (response, bytes)
+        where
+          getResponse num buffSize | num >= buffSize        = SednaError
+                                   | num < 0                = fromCConstant num                              
+                                   | num == 0               = ResultEnd                      
+                                   | otherwise              = OperationSucceeded
+          
+--------------------------------------------------------------------------------
+
+enumItem :: SednaConnection -> Int -> Enumerator ByteString IO a 
+enumItem conn size = enumFromCallback cb ()
+    where
+      cb () = do
+        (code, result) <- sednaGetData conn size
+        case code of
+          OperationSucceeded -> return $ Right ((True, ()), result)
+          ResultEnd          -> return $ Right ((False, ()), result)
+          _                  -> return $ Left (toException SednaFailedException)
+                                
+--------------------------------------------------------------------------------
+
+enumItemChunked  :: SednaConnection
+                 -> Int
+                 -> Iteratee [ByteString] IO a
+                 -> IO (Iteratee ByteString IO (Iteratee [ByteString] IO a))
+enumItemChunked conn size = (enumItem conn size) .  I.group size
 
 --------------------------------------------------------------------------------
 
-sednaGetBytes conn size = do 
-  (responseCode, chunk) <- liftIO $ sednaGetData conn size 
-  enumChunk $ Chunk chunk             
+procItemStream :: SednaConnection ->  Int -> Iteratee [ByteString] IO a -> IO a
+procItemStream conn size iter = step iter
+    where step iter' = do                           
+            iter'' <- enumItemChunked conn size iter' >>= run
+            res    <- sednaNext conn
+            case res of 
+              NextItemSucceeded -> step iter''
+              ResultEnd         -> run iter''
+              NextItemFailed    -> throw SednaNextItemFailedException
+              _                 -> throw SednaFailedException
 
+--------------------------------------------------------------------------------
+
+getXMLData :: (Monad m) => Iteratee [ByteString] m String
+getXMLData = icont (step "") Nothing
+    where
+      step acc (Chunk bs) | bs == []  = icont (step acc) Nothing
+                          | otherwise = icont (step (C.unpack.C.concat $ bs)) Nothing
+      step acc (EOF _)                = idone acc (EOF Nothing)
+                                                                     
 --------------------------------------------------------------------------------
       
 sednaLoadData :: SednaConnection 
@@ -168,7 +214,7 @@ loadXMLBytes conn doc coll =  liftIO (sednaBegin conn) >> liftI step
     
 loadXMLFile :: SednaConnection -> String -> String -> String -> IO ()       
 loadXMLFile conn file doc coll = do 
-  iteratee <- enumFile 8 file $ loadXMLBytes conn doc coll  
+  iteratee <- enumFile 8 file $ loadXMLBytes conn doc coll
   run iteratee
   
 --------------------------------------------------------------------------------

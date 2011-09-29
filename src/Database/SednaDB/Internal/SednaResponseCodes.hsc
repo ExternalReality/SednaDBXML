@@ -9,7 +9,7 @@ import Foreign.C.Types
 #include <libsedna.h>
 
 --------------------------------------------------------------------------------
-data SednaResponseCode = OperationSucceded
+data SednaResponseCode = OperationSucceeded
                        | SessionOpen
                        | SessionClosed
                        | AuthenticationFailed
@@ -47,7 +47,7 @@ data SednaResponseCode = OperationSucceded
 
 fromCConstant :: CInt -> SednaResponseCode
 fromCConstant x = case x of
-  #{const SEDNA_OPERATION_SUCCEEDED}            -> OperationSucceded
+  #{const SEDNA_OPERATION_SUCCEEDED}            -> OperationSucceeded
   #{const SEDNA_SESSION_OPEN}                   -> SessionOpen
   #{const SEDNA_SESSION_CLOSED}                 -> SessionClosed
   #{const SEDNA_AUTHENTICATION_FAILED}          -> AuthenticationFailed
@@ -85,7 +85,7 @@ fromCConstant x = case x of
 
 toCConstant :: (Integral a) => SednaResponseCode -> a
 toCConstant x = case x of
-  OperationSucceded            ->  #{const SEDNA_OPERATION_SUCCEEDED}
+  OperationSucceeded           ->  #{const SEDNA_OPERATION_SUCCEEDED}
   SessionOpen                  ->  #{const SEDNA_SESSION_OPEN}
   SessionClosed                ->  #{const SEDNA_SESSION_CLOSED}
   AuthenticationFailed         ->  #{const SEDNA_AUTHENTICATION_FAILED}
