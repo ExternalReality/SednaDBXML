@@ -6,11 +6,10 @@ import Control.Exception
 import Control.Monad.Trans
 
 import Data.ByteString as BS
-import Data.ByteString.Char8 as C (pack,unpack,concat)
+import Data.ByteString.Char8 as C (pack,unpack,concat,append, empty)
 import Data.Iteratee as I hiding (mapM_, peek)
 import Data.Iteratee.IO
 import Data.Maybe 
-
 import qualified Data.Map as DM (fromList, lookup)
 
 import Foreign
@@ -116,10 +115,11 @@ sednaGetData conn size = useAsCStringLen (BS.replicate size 0) loadData
      
       return $ (response, bytes)
         where
-          getResponse num buffSize | num >= buffSize        = SednaError
+          getResponse num buffSize | num > buffSize         = SednaError
                                    | num < 0                = fromCConstant num                              
                                    | num == 0               = ResultEnd                      
-                                   | otherwise              = OperationSucceeded
+                                   | num > 0                = OperationSucceeded
+                                   | otherwise              = SednaError
           
 --------------------------------------------------------------------------------
 
@@ -131,7 +131,7 @@ enumItem conn size = enumFromCallback cb ()
         case code of
           OperationSucceeded -> return $ Right ((True, ()), result)
           ResultEnd          -> return $ Right ((False, ()), result)
-          _                  -> return $ Left (toException SednaFailedException)
+          _                  -> throw SednaFailedException
                                 
 --------------------------------------------------------------------------------
 
@@ -157,12 +157,27 @@ procItemStream conn size iter = step iter
 --------------------------------------------------------------------------------
 
 getXMLData :: (Monad m) => Iteratee [ByteString] m String
-getXMLData = icont (step "") Nothing
+getXMLData = icont (step C.empty) Nothing
     where
       step acc (Chunk bs) | bs == []  = icont (step acc) Nothing
-                          | otherwise = icont (step (C.unpack.C.concat $ bs)) Nothing
-      step acc (EOF _)                = idone acc (EOF Nothing)
-                                                                     
+                          | otherwise = icont (step (C.append acc (C.concat $ bs))) Nothing
+      step acc (EOF _)                = idone (C.unpack acc) (EOF Nothing)
+                                 
+
+testResultData = do
+  (response, conn) <- sednaConnect "localhost" "testdb" "SYSTEM" "MANAGER"
+  sednaBegin conn
+  if response == SessionOpen 
+    then print "Session Open" 
+    else throw SednaFailedException
+  result <- sednaExecute conn "doc('$documents')"
+  if result == QuerySucceded 
+    then print "Query Succeeded" 
+    else throw SednaFailedException
+  datum <- procItemStream conn 8 getXMLData
+  sendaCommit conn
+  return datum
+                                    
 --------------------------------------------------------------------------------
       
 sednaLoadData :: SednaConnection 
