@@ -78,8 +78,8 @@ sednaRollback = withSednaConnection c'SErollback
 
 --------------------------------------------------------------------------------
 
-sendaCommit :: SednaConnection -> IO SednaResponseCode
-sendaCommit = withSednaConnection c'SEcommit
+sednaCommit :: SednaConnection -> IO SednaResponseCode
+sednaCommit = withSednaConnection c'SEcommit
 
 --------------------------------------------------------------------------------
 
@@ -182,7 +182,7 @@ testResultData = do
     then print "Query Succeeded" 
     else throw SednaFailedException
   datum <- procItemStream conn 8 getXMLData
-  sendaCommit conn
+  sednaCommit conn
   return datum
                                     
 --------------------------------------------------------------------------------
@@ -228,7 +228,7 @@ loadXMLBytes conn doc coll =  liftIO (sednaBegin conn) >> liftI step
     step stream = do
       response <- liftIO $ sednaEndLoadData conn 
       case response of
-         BulkLoadSucceeded -> liftIO  (sendaCommit conn) >> idone () stream
+         BulkLoadSucceeded -> liftIO  (sednaCommit conn) >> idone () stream
          BulkLoadFailed    -> throw SednaBulkLoadFailedException
          _                 -> throw SednaFailedException
              
