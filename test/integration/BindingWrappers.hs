@@ -63,7 +63,7 @@ testOpenConnection = TestCase $
                      do           
                        (status, conn) <- setup
                        result         <- assertEqual 
-                                           "Testing connection intialization." 
+                                           "Testing connection initialization." 
                                            SessionOpen 
                                            status 
                        tearDown(status, conn)
