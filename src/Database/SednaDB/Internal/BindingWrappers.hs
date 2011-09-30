@@ -101,7 +101,14 @@ sednaExecuteLong = sednaExecuteAction c'SEexecuteLong
 sednaExecute :: SednaConnection -> String -> IO SednaResponseCode
 sednaExecute = sednaExecuteAction c'SEexecute
 
---------------------------------------------------------------------------------  
+--------------------------------------------------------------------------------
+-- SednaGetData deals with an underlying c function c'SEgetData which
+-- has heterogeneous response types. To remedy this, SednaGetData
+-- returns an OperationSucceeded response on success when receiving
+-- the number of bytes read from the underlying c function. This is
+-- why you see this function returning its own response code instead
+-- of simply encoding values from the response of c'SEgetData.
+   
 sednaGetData :: SednaConnection -> Int -> IO (SednaResponseCode, ByteString)
 sednaGetData conn size = useAsCStringLen (BS.replicate size 0) loadData
   where
