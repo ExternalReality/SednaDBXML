@@ -169,22 +169,12 @@ getXMLData = icont (step C.empty) Nothing
       step acc (Chunk bs) | bs == []  = icont (step acc) Nothing
                           | otherwise = icont (step (C.append acc (C.concat $ bs))) Nothing
       step acc (EOF _)                = idone (C.unpack acc) (EOF Nothing)
-                                 
 
-testResultData = do
-  (response, conn) <- sednaConnect "localhost" "testdb" "SYSTEM" "MANAGER"
-  sednaBegin conn
-  if response == SessionOpen 
-    then print "Session Open" 
-    else throw SednaFailedException
-  result <- sednaExecute conn "doc('$documents')"
-  if result == QuerySucceded 
-    then print "Query Succeeded" 
-    else throw SednaFailedException
-  datum <- procItemStream conn 8 getXMLData
-  sednaCommit conn
-  return datum
-                                    
+--------------------------------------------------------------------------------
+
+sednaGetResultString :: SednaConnection -> IO String
+sednaGetResultString conn = procItemStream conn 8 getXMLData
+                                                                     
 --------------------------------------------------------------------------------
       
 sednaLoadData :: SednaConnection 

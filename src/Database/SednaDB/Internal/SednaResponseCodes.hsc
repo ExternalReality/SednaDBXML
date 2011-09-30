@@ -15,9 +15,9 @@ data SednaResponseCode = OperationSucceeded
                        | AuthenticationFailed
                        | OpenSessionFailed
                        | CloseSessionFailed
-                       | QuerySucceded
+                       | QuerySucceeded
                        | QueryFailed
-                       | UpdateSucceded
+                       | UpdateSucceeded
                        | UpdateFailed
                        | BulkLoadSucceeded
                        | BulkLoadFailed
@@ -25,7 +25,7 @@ data SednaResponseCode = OperationSucceeded
                        | BeginTransactionFailed
                        | RollBackTansactionSucceeded
                        | RollBackTransactionFailed
-                       | CommitTransactionSucceded
+                       | CommitTransactionSucceeded
                        | CommitTransactionFailed
                        | NextItemSucceeded
                        | NextItemFailed
@@ -53,9 +53,9 @@ fromCConstant x = case x of
   #{const SEDNA_AUTHENTICATION_FAILED}          -> AuthenticationFailed
   #{const SEDNA_OPEN_SESSION_FAILED}            -> OpenSessionFailed
   #{const SEDNA_CLOSE_SESSION_FAILED}           -> CloseSessionFailed
-  #{const SEDNA_QUERY_SUCCEEDED}                -> QuerySucceded
+  #{const SEDNA_QUERY_SUCCEEDED}                -> QuerySucceeded
   #{const SEDNA_QUERY_FAILED}                   -> QueryFailed
-  #{const SEDNA_UPDATE_SUCCEEDED}               -> UpdateSucceded
+  #{const SEDNA_UPDATE_SUCCEEDED}               -> UpdateSucceeded
   #{const SEDNA_UPDATE_FAILED}                  -> UpdateFailed
   #{const SEDNA_BULK_LOAD_SUCCEEDED}            -> BulkLoadSucceeded
   #{const SEDNA_BULK_LOAD_FAILED}               -> BulkLoadFailed
@@ -63,7 +63,7 @@ fromCConstant x = case x of
   #{const SEDNA_BEGIN_TRANSACTION_FAILED}       -> BeginTransactionFailed
   #{const SEDNA_ROLLBACK_TRANSACTION_SUCCEEDED} -> RollBackTansactionSucceeded
   #{const SEDNA_ROLLBACK_TRANSACTION_FAILED}    -> RollBackTransactionFailed
-  #{const SEDNA_COMMIT_TRANSACTION_SUCCEEDED}   -> CommitTransactionSucceded
+  #{const SEDNA_COMMIT_TRANSACTION_SUCCEEDED}   -> CommitTransactionSucceeded
   #{const SEDNA_COMMIT_TRANSACTION_FAILED}      -> CommitTransactionFailed
   #{const SEDNA_NEXT_ITEM_SUCCEEDED}            -> NextItemSucceeded
   #{const SEDNA_NEXT_ITEM_FAILED}               -> NextItemFailed
@@ -91,9 +91,9 @@ toCConstant x = case x of
   AuthenticationFailed         ->  #{const SEDNA_AUTHENTICATION_FAILED}
   OpenSessionFailed            ->  #{const SEDNA_OPEN_SESSION_FAILED}
   CloseSessionFailed           ->  #{const SEDNA_CLOSE_SESSION_FAILED}
-  QuerySucceded                ->  #{const SEDNA_QUERY_SUCCEEDED}
+  QuerySucceeded               ->  #{const SEDNA_QUERY_SUCCEEDED}
   QueryFailed                  ->  #{const SEDNA_QUERY_FAILED}
-  UpdateSucceded               ->  #{const SEDNA_UPDATE_SUCCEEDED}
+  UpdateSucceeded              ->  #{const SEDNA_UPDATE_SUCCEEDED}
   UpdateFailed                 ->  #{const SEDNA_UPDATE_FAILED}
   BulkLoadSucceeded            ->  #{const SEDNA_BULK_LOAD_SUCCEEDED}
   BulkLoadFailed               ->  #{const SEDNA_BULK_LOAD_FAILED}
@@ -101,7 +101,7 @@ toCConstant x = case x of
   BeginTransactionFailed       ->  #{const SEDNA_BEGIN_TRANSACTION_FAILED}
   RollBackTansactionSucceeded  ->  #{const SEDNA_ROLLBACK_TRANSACTION_SUCCEEDED}
   RollBackTransactionFailed    ->  #{const SEDNA_ROLLBACK_TRANSACTION_FAILED}
-  CommitTransactionSucceded    ->  #{const SEDNA_COMMIT_TRANSACTION_SUCCEEDED}
+  CommitTransactionSucceeded   ->  #{const SEDNA_COMMIT_TRANSACTION_SUCCEEDED}
   CommitTransactionFailed      ->  #{const SEDNA_COMMIT_TRANSACTION_FAILED}
   NextItemSucceeded            ->  #{const SEDNA_NEXT_ITEM_SUCCEEDED}
   NextItemFailed               ->  #{const SEDNA_NEXT_ITEM_FAILED}

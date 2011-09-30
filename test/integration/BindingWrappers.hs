@@ -18,13 +18,15 @@ import Database.SednaDB.Internal.SednaResponseCodes
 
 bringUpDB = do 
               readProcess "se_gov" [] "/dev/null"
+              readProcess "se_cdb"["testdb"] "/dev/null"            
               readProcess "se_sm" ["testdb"] "/dev/null"
-              
+                            
 --------------------------------------------------------------------------------
 
 bringDownDB = do 
-               readProcess "se_smsd" ["testdb"] "/dev/null"
-               readProcess "se_stop" [] "/dev/null"
+                readProcess "se_smsd" ["testdb"] "/dev/null"
+                readProcess "se_ddb"  ["testdb"] "/dev/null"
+                readProcess "se_stop" [] "/dev/null"
 
 --------------------------------------------------------------------------------
 
@@ -60,9 +62,10 @@ testOpenConnection :: Test
 testOpenConnection = TestCase $
                      do           
                        (status, conn) <- setup
-                       result         <- assertEqual "Testing connection intialization." 
-                                                     SessionOpen 
-                                                     status 
+                       result         <- assertEqual 
+                                           "Testing connection intialization." 
+                                           SessionOpen 
+                                           status 
                        tearDown(status, conn)
                        return result
 
@@ -125,19 +128,46 @@ testLoadData =
 
 --------------------------------------------------------------------------------
 
-testLoadFile = sednaDBTest $ (\(_,conn) -> do
-                                loadXMLFile conn
-                                            "test/fixtures/baseballleague.xml"
-                                            "testdoc3"
-                                            "testcollection")
+testLoadFile = sednaDBTest $ 
+               (\(_,conn) -> do
+                  loadXMLFile conn
+                             "test/fixtures/baseballleague.xml"
+                             "testdoc3"
+                             "testcollection")
+
+--------------------------------------------------------------------------------
+
+testExecuteQuery :: Test
+testExecuteQuery = TestCase $ sednaDBTest $ 
+                 (\(_,conn) -> do
+                   sednaBegin conn                 
+                               
+                   queryExecutionStatus <- sednaExecute conn "doc('$documents')"
+                   assert <- assertEqual "Testing proper execution of valid query."  
+                               queryExecutionStatus
+                               QuerySucceded
+                   sednaCommit conn
+                   return assert)
                       
 --------------------------------------------------------------------------------
                                                             
 connectionTests :: Test
 connectionTests = TestList [testOpenConnection, testCloseConnection]
 
+--------------------------------------------------------------------------------
+
 controlTests :: Test
 controlTests = TestList [testGetConnectionAttr, testSetConnectionAttr]
 
+--------------------------------------------------------------------------------
+
 transactionTests :: Test
-transactionTests = TestList [testBeginTransaction, testLoadData]
+transactionTests = TestList [ testBeginTransaction 
+                            , testLoadData 
+                            , testExecuteQuery
+                            ]
+
+--------------------------------------------------------------------------------
+
+allTests :: Test
+allTests = TestList [connectionTests, controlTests, transactionTests]
