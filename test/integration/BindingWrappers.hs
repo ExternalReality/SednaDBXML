@@ -145,7 +145,7 @@ testExecuteQuery = TestCase $ sednaDBTest $
                    queryExecutionStatus <- sednaExecute conn "doc('$documents')"
                    assert <- assertEqual "Testing proper execution of valid query."  
                                queryExecutionStatus
-                               QuerySucceded
+                               QuerySucceeded
                    sednaCommit conn
                    return assert)
                       
