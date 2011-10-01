@@ -7,9 +7,6 @@ module Test.Integration.BindingsWrappers where
 import Control.Exception       (bracket)
 import Data.ByteString.Char8   (pack, unpack)
 import Foreign                 (free)
-import Language.Haskell.TH.Quote 
-import Language.Haskell.TH.Syntax 
-import Language.Haskell.TH.Lib 
 import System.Exit             (ExitCode)
 import System.Process          (runCommand, waitForProcess, readProcess)
 
