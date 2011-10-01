@@ -1,10 +1,15 @@
+{-# LANGUAGE QuasiQuotes #-} 
+
 module Test.Integration.BindingsWrappers where
 
 --------------------------------------------------------------------------------
 
 import Control.Exception       (bracket)
-import Data.ByteString.Char8   (pack)
+import Data.ByteString.Char8   (pack, unpack)
 import Foreign                 (free)
+import Language.Haskell.TH.Quote 
+import Language.Haskell.TH.Syntax 
+import Language.Haskell.TH.Lib 
 import System.Exit             (ExitCode)
 import System.Process          (runCommand, waitForProcess, readProcess)
 
@@ -16,16 +21,20 @@ import Database.SednaDB.Internal.SednaResponseCodes
 
 --------------------------------------------------------------------------------
 
+dbName = "integrationTestDataBase6"
+
+--------------------------------------------------------------------------------
+
 bringUpDB = do 
               readProcess "se_gov" [] "/dev/null"
-              readProcess "se_cdb"["testdb"] "/dev/null"            
-              readProcess "se_sm" ["testdb"] "/dev/null"
+              readProcess "se_cdb"[dbName] "/dev/null"            
+              readProcess "se_sm" [dbName] "/dev/null"
                             
 --------------------------------------------------------------------------------
 
 bringDownDB = do 
-                readProcess "se_smsd" ["testdb"] "/dev/null"
-                readProcess "se_ddb"  ["testdb"] "/dev/null"
+                readProcess "se_smsd" [dbName] "/dev/null"
+                readProcess "se_ddb"  [dbName] "/dev/null"
                 readProcess "se_stop" [] "/dev/null"
 
 --------------------------------------------------------------------------------
@@ -33,7 +42,7 @@ bringDownDB = do
 setup :: IO (SednaResponseCode, SednaConnection)
 setup = do 
          bringUpDB
-         sednaConnect "localhost" "testdb" "SYSTEM" "MANAGER"
+         sednaConnect "localhost" dbName "SYSTEM" "MANAGER"
 
 tearDown = \(_, conn) -> 
   do
@@ -128,12 +137,12 @@ testLoadData =
 
 --------------------------------------------------------------------------------
 
-testLoadFile = sednaDBTest $ 
-               (\(_,conn) -> do
-                  loadXMLFile conn
-                             "test/fixtures/baseballleague.xml"
-                             "testdoc3"
-                             "testcollection")
+-- testLoadFile = sednaDBTest $ 
+--                (\(_,conn) -> do
+--                   loadXMLFile conn
+--                              "test/fixtures/baseballleague.xml"
+--                              "testdoc3"
+--                              "testcollection")
 
 --------------------------------------------------------------------------------
 
@@ -148,7 +157,51 @@ testExecuteQuery = TestCase $ sednaDBTest $
                                QuerySucceeded
                    sednaCommit conn
                    return assert)
-                      
+
+--------------------------------------------------------------------------------
+
+testLoadRetrieveData :: Test
+testLoadRetrieveData =
+    TestCase $ sednaDBTest $ 
+                 (\(_,conn) -> do
+                    let xmlData = pack "<?xml version=\"1.0\" standalone=\"yes\"?><note>Test must have Failed :-( </note>" 
+ 
+                    beginTransactionStatus <- sednaBegin conn
+                    assertEqual "Test begin transaction"
+                                BeginTransactionSucceeded
+                                beginTransactionStatus
+                 
+                    createCollectionStatus <- sednaExecute conn "CREATE COLLECTION 'testCollection'"
+                    assertEqual "Test query and create collection"
+                                 UpdateSucceeded
+                                 createCollectionStatus
+                     
+                    loadDataStatus <- sednaLoadData conn xmlData "testdoc" "testCollection"
+                    assertEqual "TestLoadData"
+                                DataChunkLoaded
+                                loadDataStatus
+
+                    endloadStatus <- sednaEndLoadData conn
+                    assertEqual "TestLoadData"
+                                BulkLoadSucceeded
+                                endloadStatus
+                                     
+
+                    queryExecutionStatus <- sednaExecute conn "doc('testdoc','testCollection')"
+                    assertEqual "Test query"
+                                QuerySucceeded
+                                queryExecutionStatus
+                                                               
+                    queryResult <- sednaGetResultString conn
+                    assertEqual "Testing proper retrieval of query results"  
+                                (unpack xmlData)
+                                (concat.lines $ queryResult)
+
+                    commitStatus <- sednaCommit conn
+                    assertEqual "Testing transaction commit"  
+                                CommitTransactionSucceeded
+                                commitStatus)
+                    
 --------------------------------------------------------------------------------
                                                             
 connectionTests :: Test
@@ -165,6 +218,7 @@ transactionTests :: Test
 transactionTests = TestList [ testBeginTransaction 
                             , testLoadData 
                             , testExecuteQuery
+                            , testLoadRetrieveData
                             ]
 
 --------------------------------------------------------------------------------
