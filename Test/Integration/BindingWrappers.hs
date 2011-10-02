@@ -1,9 +1,8 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Test.Integration.BindingsWrappers where
+module Test.Integration.SednaBindings where
 
 --------------------------------------------------------------------------------
-
 import Control.Exception       (bracket)
 import Data.ByteString.Char8   (pack, unpack)
 import Foreign                 (free)
@@ -12,30 +11,27 @@ import System.Process          (runCommand, waitForProcess, readProcess)
 
 import Test.HUnit
 
-import Database.SednaDB.Internal.BindingWrappers
+import Database.SednaDB.Internal.SednaBindings
+import Database.SednaDB.Internal.SednaBindingWrappers      (sednaGetResultString)
 import Database.SednaDB.Internal.SednaConnectionAttributes
 import Database.SednaDB.Internal.SednaResponseCodes
 
 --------------------------------------------------------------------------------
-
 dbName = "integrationTestDataBase6"
 
 --------------------------------------------------------------------------------
-
 bringUpDB = do
               readProcess "se_gov" [] "/dev/null"
               readProcess "se_cdb"[dbName] "/dev/null"
               readProcess "se_sm" [dbName] "/dev/null"
 
 --------------------------------------------------------------------------------
-
 bringDownDB = do
                 readProcess "se_smsd" [dbName] "/dev/null"
                 readProcess "se_ddb"  [dbName] "/dev/null"
                 readProcess "se_stop" [] "/dev/null"
 
 --------------------------------------------------------------------------------
-
 setup :: IO (SednaResponseCode, SednaConnection)
 setup = do
          bringUpDB
@@ -47,7 +43,6 @@ tearDown = \(_, conn) ->
     bringDownDB
 
 --------------------------------------------------------------------------------
-
 sednaDBTest  :: ((SednaResponseCode, SednaConnection) -> IO c) -> IO c
 sednaDBTest = bracket setup tearDown
 
@@ -63,7 +58,6 @@ connectionTest connFun msg succVal = TestCase $ sednaDBTest $
        assertEqual msg succVal result)
 
 --------------------------------------------------------------------------------
-
 testOpenConnection :: Test
 testOpenConnection = TestCase $
                      do
@@ -76,21 +70,18 @@ testOpenConnection = TestCase $
                        return result
 
 --------------------------------------------------------------------------------
-
 testCloseConnection :: Test
 testCloseConnection =  connectionTest sednaCloseConnection
                                       "Testing connection closure."
                                        SessionClosed
 
 --------------------------------------------------------------------------------
-
 testBeginTransaction :: Test
 testBeginTransaction = connectionTest sednaBegin
                                       "Testing transaction initialization."
                                       BeginTransactionSucceeded
 
 --------------------------------------------------------------------------------
-
 testSetConnectionAttr :: Test
 testSetConnectionAttr =
   TestCase $ sednaDBTest
@@ -102,7 +93,6 @@ testSetConnectionAttr =
                                 result)
 
 --------------------------------------------------------------------------------
-
 testGetConnectionAttr :: Test
 testGetConnectionAttr =
   TestCase $ sednaDBTest
@@ -117,7 +107,6 @@ testGetConnectionAttr =
                    result)
 
 --------------------------------------------------------------------------------
-
 testLoadData :: Test
 testLoadData =
  TestCase $ sednaDBTest
@@ -133,7 +122,6 @@ testLoadData =
                   resultCode)
 
 --------------------------------------------------------------------------------
-
 -- testLoadFile = sednaDBTest $
 --                (\(_,conn) -> do
 --                   loadXMLFile conn
@@ -142,7 +130,6 @@ testLoadData =
 --                              "testcollection")
 
 --------------------------------------------------------------------------------
-
 testExecuteQuery :: Test
 testExecuteQuery = TestCase $ sednaDBTest $
                  (\(_,conn) -> do
@@ -156,7 +143,6 @@ testExecuteQuery = TestCase $ sednaDBTest $
                    return assert)
 
 --------------------------------------------------------------------------------
-
 testLoadRetrieveData :: Test
 testLoadRetrieveData =
     TestCase $ sednaDBTest $
@@ -199,17 +185,14 @@ testLoadRetrieveData =
                                 commitStatus)
 
 --------------------------------------------------------------------------------
-
 connectionTests :: Test
 connectionTests = TestList [testOpenConnection, testCloseConnection]
 
 --------------------------------------------------------------------------------
-
 controlTests :: Test
 controlTests = TestList [testGetConnectionAttr, testSetConnectionAttr]
 
 --------------------------------------------------------------------------------
-
 transactionTests :: Test
 transactionTests = TestList [ testBeginTransaction
                             , testLoadData
@@ -218,6 +201,5 @@ transactionTests = TestList [ testBeginTransaction
                             ]
 
 --------------------------------------------------------------------------------
-
 allTests :: Test
 allTests = TestList [connectionTests, controlTests, transactionTests]

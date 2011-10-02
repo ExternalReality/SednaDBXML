@@ -28,13 +28,14 @@ Library
                           iteratee >= 0.8,
                           mtl  
 
-  Exposed-Modules:        Database.SednaDB.Internal.BindingWrappers
-                          Database.SednaDB.Internal.SednaBindings
+  Exposed-Modules:        Database.SednaDB.Internal.SednaBindings
+                          Database.SednaDB.Internal.SednaBindingWrappers
+                          Database.SednaDB.Internal.SednaCBindings
                           Database.SednaDB.Internal.SednaConnectionAttributes
                           Database.SednaDB.Internal.SednaExceptions
                           Database.SednaDB.Internal.SednaResponseCodes
                           Database.SednaDB.Internal.SpDefs      
-  
+
   Include-Dirs:           /usr/local/sedna/driver/c  
   Includes:               libsedna.h,
                           sp_defs.h
