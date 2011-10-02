@@ -1,22 +1,35 @@
-module Database.SednaDB.Internal.BindingWrappers where
+module Database.SednaDB.Internal.BindingWrappers
+    ( SednaConnection
+    , sednaConnect
+    , sednaCloseConnection
+    , sednaBegin
+    , sednaRollBack
+    , sednaCommit
+    , sednaExecute
+    , sednaExecuteLong
+    , sednaGetResultString
+    , sednaLoadFile
+    , sednaLoadData
+    , sednaTransactionStatus
+    , sednaShowTime
+    , sednaGetLastErrorMsg
+    ) where
 
 --------------------------------------------------------------------------------
 
 import Control.Exception
 import Control.Monad.Trans
-
 import Data.ByteString as BS
 import Data.ByteString.Char8 as C (pack,unpack,concat,append, empty)
-import Data.Iteratee as I hiding (mapM_, peek)
-import Data.Iteratee.IO
 import Data.Maybe 
-import qualified Data.Map as DM (fromList, lookup)
-
 import Foreign
 import Foreign.C.String
 import Foreign.C.Types
+import Prelude hiding             (replicate,concat)
+import qualified Data.Map as DM   (fromList, lookup)
 
-import Prelude hiding (replicate,concat)
+import Data.Iteratee as I hiding  (mapM_, peek)
+import Data.Iteratee.IO
 
 import Database.SednaDB.Internal.SednaBindings
 import Database.SednaDB.Internal.SednaConnectionAttributes 
@@ -30,7 +43,7 @@ type DebugHandler    = C'debug_handler_t
 
 --------------------------------------------------------------------------------
 
-sednaConnect :: String 
+sednaConnect :: String
              -> String 
              -> String 
              -> String 
@@ -73,8 +86,8 @@ sednaBegin = withSednaConnection c'SEbegin
 
 --------------------------------------------------------------------------------
 
-sednaRollback :: SednaConnection -> IO SednaResponseCode
-sednaRollback = withSednaConnection c'SErollback
+sednaRollBack :: SednaConnection -> IO SednaResponseCode
+sednaRollBack = withSednaConnection c'SErollback
 
 --------------------------------------------------------------------------------
 
@@ -180,7 +193,7 @@ sednaGetResultString conn = procItemStream conn 8 getXMLData
 sednaLoadData :: SednaConnection 
               -> ByteString 
               -> String 
-              -> String 
+              -> String
               -> IO SednaResponseCode
 sednaLoadData conn buff docName colName = do
   useAsCStringLen buff loadData 
@@ -203,7 +216,7 @@ sednaEndLoadData = withSednaConnection c'SEendLoadData
 
 loadXMLBytes:: MonadIO m => SednaConnection 
             -> String  
-            -> String 
+            -> String
             -> Iteratee ByteString m ()
 loadXMLBytes conn doc coll =  liftIO (sednaBegin conn) >> liftI step
   where 
@@ -224,8 +237,12 @@ loadXMLBytes conn doc coll =  liftIO (sednaBegin conn) >> liftI step
              
 --------------------------------------------------------------------------------
     
-loadXMLFile :: SednaConnection -> String -> String -> String -> IO ()       
-loadXMLFile conn file doc coll = do 
+sednaLoadFile :: SednaConnection 
+              -> String 
+              -> String 
+              -> String 
+              -> IO ()       
+sednaLoadFile conn file doc coll = do 
   iteratee <- enumFile 8 file $ loadXMLBytes conn doc coll
   run iteratee
   
@@ -275,8 +292,8 @@ sednaConnectionAttributeMap attr = DM.lookup attr attrValToAttrMap
 --------------------------------------------------------------------------------
                                                 
 sednaSetConnectionAttr :: SednaConnection 
-                          -> SednaConnAttrValue 
-                          -> IO SednaResponseCode
+                       -> SednaConnAttrValue 
+                       -> IO SednaResponseCode
 sednaSetConnectionAttr conn attrVal = 
   alloca (\ptrAttrVal -> do
              let connAttr = fromIntegral        $ 
