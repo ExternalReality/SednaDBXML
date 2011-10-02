@@ -3,7 +3,7 @@ module Database.SednaDB.Internal.SednaBindingWrappers
     , sednaQuery
     , sednaQueryFromFile
     , sednaLoadFile
-    )where
+    ) where
 
 --------------------------------------------------------------------------------
 import Control.Exception
@@ -29,8 +29,9 @@ sednaGetResultString conn = procItemStream conn 8 getXMLData
 getXMLData :: (Monad m) => Iteratee [ByteString] m String
 getXMLData = icont (step C.empty) Nothing
     where
-      step acc (Chunk bs) | bs == []  = icont (step acc) Nothing
-                          | otherwise = icont (step (C.append acc (C.concat $ bs))) Nothing
+      step acc (Chunk bs) 
+          | bs == []  = icont (step acc) Nothing
+          | otherwise = icont (step $ C.append acc (C.concat $ bs)) Nothing
       step acc (EOF _)                = idone (C.unpack acc) (EOF Nothing)
 
 --------------------------------------------------------------------------------
