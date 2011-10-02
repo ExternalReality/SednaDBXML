@@ -1,10 +1,9 @@
 module Database.SednaDB.Internal.SednaBindingWrappers 
-    (
-     sednaLoadFile,
-     sednaGetResultString
-    )                                              
-     
-where
+    ( sednaGetResultString
+    , sednaQuery
+    , sednaQueryFromFile
+    , sednaLoadFile
+    )where
 
 --------------------------------------------------------------------------------
 import Control.Exception
