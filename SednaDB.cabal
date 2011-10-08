@@ -44,9 +44,11 @@ Library
                           Database.SednaDB.Internal.SednaResponseCodes
                           Database.SednaDB.Internal.SpDefs
 
-  Include-Dirs:           /usr/local/sedna/driver/c
+  Include-Dirs:           include/
   Includes:               libsedna.h,
                           sp_defs.h
+
+  Extra-Libraries:        sedna
 
   Ghc-Options:            -Wall
 

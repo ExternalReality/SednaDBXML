@@ -11,7 +11,7 @@ import System.Process          (runCommand, waitForProcess, readProcess)
 
 import Test.HUnit
 
-import Database.SednaDB.Internal.SednaBindings
+import Database.SednaDB.SednaBindings
 import Database.SednaDB.Internal.SednaBindingWrappers      (sednaGetResultString)
 import Database.SednaDB.Internal.SednaConnectionAttributes
 import Database.SednaDB.Internal.SednaResponseCodes

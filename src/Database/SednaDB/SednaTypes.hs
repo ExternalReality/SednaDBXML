@@ -13,7 +13,6 @@ import Control.Monad.Error
 import Control.Monad.Reader
 import Foreign (Ptr)
 
-
 import Database.SednaDB.Internal.SednaCBindings (C'SednaConnection)
 
 --------------------------------------------------------------------------------
@@ -47,7 +46,6 @@ runTransaction :: SednaConnection
 runTransaction conn doc coll trans = runErrorT (runReaderT trans env)
     where env = TransactionEnv conn coll doc
 
---------------------------------------------------------------------------------
 
 
 

@@ -34,7 +34,6 @@ import Database.SednaDB.Internal.SednaCBindings
 import Database.SednaDB.Internal.SednaConnectionAttributes
 import Database.SednaDB.Internal.SednaResponseCodes
 
---------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------
 sednaConnect :: String
