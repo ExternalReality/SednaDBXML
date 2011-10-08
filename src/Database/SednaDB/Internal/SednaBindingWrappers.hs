@@ -105,5 +105,3 @@ sednaQueryFromFile :: String -> IO ()
 sednaQueryFromFile = undefined
 
 --------------------------------------------------------------------------------
-
-

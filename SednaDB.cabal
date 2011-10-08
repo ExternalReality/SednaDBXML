@@ -8,11 +8,18 @@ Build-Type:             Simple
 Maintainer:             ecjones@gmail.com
 Stability:              alpha
 Synopsis:               Sedna Native XML Binding
-Description:            Sedna is a free native XML database which provides a full range of
-                        core database services - persistent storage, ACID transactions,
-                        security, indices, hot backup. Flexible XML processing facilities
-                        include W3C XQuery implementation, tight integration of XQuery with
-                        full-text search facilities and a node-level update language.
+
+Description:            Sedna is a free native XML database which
+                        provides a full range of core database
+                        services - persistent storage, ACID
+                        transactions, security, indices, hot
+                        backup. Flexible XML processing facilities
+                        include W3C XQuery implementation, tight
+                        integration of XQuery with full-text search
+                        facilities and a node-level update
+                        language. This package provides a clean,
+                        sensible monadic interface to the underlying C
+                        library.
 
                         Sedna Home Page:
                         http://www.sedna.org/
@@ -40,9 +47,6 @@ Library
   Includes:               libsedna.h,
                           sp_defs.h
 
-  Extra-Lib-Dirs:         /usr/local/sedna/driver/c
-  Extra-Libraries:        sedna 
-
   Ghc-Options:            -Wall
                                                         
   Default-Extensions:     CPP,
@@ -51,8 +55,6 @@ Library
 Source-Repository Head  
     type:                 git
     location:             git@github.com:ExternalReality/SednaDBXML.git
-
-
 
 
 
