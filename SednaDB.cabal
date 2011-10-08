@@ -26,38 +26,33 @@ Description:            Sedna is a free native XML database which
 
 Category:               Database
 Library
-  Hs-Source-Dirs:         src        
+  Hs-Source-Dirs:         src
   Default-Language:       Haskell98
   Build-Depends:          base == 4.*,
                           bindings-DSL,
                           bytestring,
                           containers,
                           iteratee >= 0.8,
-                          mtl  
+                          mtl
 
-  Exposed-Modules:        Database.SednaDB.Internal.SednaBindings
+  Exposed-Modules:        Database.SednaDB.SednaBindings
+                          Database.SednaDB.SednaExceptions
+                          Database.SednaDB.SednaTypes
                           Database.SednaDB.Internal.SednaBindingWrappers
                           Database.SednaDB.Internal.SednaCBindings
                           Database.SednaDB.Internal.SednaConnectionAttributes
-                          Database.SednaDB.Internal.SednaExceptions
                           Database.SednaDB.Internal.SednaResponseCodes
-                          Database.SednaDB.Internal.SpDefs      
+                          Database.SednaDB.Internal.SpDefs
 
-  Include-Dirs:           /usr/local/sedna/driver/c  
+  Include-Dirs:           /usr/local/sedna/driver/c
   Includes:               libsedna.h,
                           sp_defs.h
 
   Ghc-Options:            -Wall
-                                                        
+
   Default-Extensions:     CPP,
                           ForeignFunctionInterface
 
-Source-Repository Head  
+Source-Repository Head
     type:                 git
     location:             git@github.com:ExternalReality/SednaDBXML.git
-
-
-
-
-
-

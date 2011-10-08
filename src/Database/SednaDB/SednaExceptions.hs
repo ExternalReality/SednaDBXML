@@ -2,7 +2,7 @@
 {-# LANGUAGE ExistentialQuantification #-}
 --------------------------------------------------------------------------------
 
-module Database.SednaDB.Internal.SednaExceptions where
+module Database.SednaDB.SednaExceptions where
 
 --------------------------------------------------------------------------------
 

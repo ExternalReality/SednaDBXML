@@ -17,9 +17,10 @@ import Prelude hiding             (replicate,concat)
 import Data.Iteratee as I hiding  (mapM_, peek)
 import Data.Iteratee.IO
 
-import Database.SednaDB.Internal.SednaBindings
+import Database.SednaDB.SednaExceptions
+import Database.SednaDB.SednaBindings
 import Database.SednaDB.Internal.SednaResponseCodes
-import Database.SednaDB.Internal.SednaExceptions
+
 
 --------------------------------------------------------------------------------
 sednaGetResultString :: SednaConnection -> IO String
