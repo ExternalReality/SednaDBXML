@@ -12,12 +12,13 @@ module Database.SednaDB.SednaBindings
     , sednaGetLastErrorMsg
     , sednaGetResultString
     , sednaLoadData
+    , sednaNext
     , sednaResetAllConnectionAttr
     , sednaRollBack
     , sednaSetConnectionAttr
     , sednaShowTime
     , sednaTransactionStatus
-    , sednaNext
+    , sednaLoadFile
     ) where
 
 --------------------------------------------------------------------------------
@@ -269,3 +270,33 @@ enumItem conn size = enumFromCallback cb ()
           OperationSucceeded -> return $ Right ((True, ()), result)
           ResultEnd          -> return $ Right ((False, ()), result)
           _                  -> throw SednaFailedException
+--------------------------------------------------------------------------------
+loadXMLBytes:: MonadIO m => SednaConnection
+            -> String
+            -> String
+            -> Iteratee ByteString m ()
+loadXMLBytes conn doc coll =  liftIO (sednaBegin conn) >> liftI step
+  where
+    step s@(I.Chunk xs)
+      | xs == (C.pack "") = liftI step
+      | otherwise = do
+        response <- liftIO $ sednaLoadData conn xs doc coll
+        if response == DataChunkLoaded
+          then liftIO (print s) >>  liftI step
+          else throw SednaFailedException
+
+    step stream = do
+      response <- liftIO $ sednaEndLoadData conn
+      case response of
+         BulkLoadSucceeded -> liftIO  (sednaCommit conn) >> idone () stream
+         BulkLoadFailed    -> throw SednaBulkLoadFailedException
+         _                 -> throw SednaFailedException
+
+--------------------------------------------------------------------------------
+sednaLoadFile :: FilePath -> SednaConnection ->  Document -> Collection -> IO ()
+sednaLoadFile file conn doc coll = do
+   iteratee  <- enumFile 8 file $ loadXMLBytes 
+                                  conn 
+                                  doc 
+                                  coll
+   run iteratee
