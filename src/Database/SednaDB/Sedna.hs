@@ -43,5 +43,5 @@ sednaQueryFromFile :: FilePath -> Transaction ()
 sednaQueryFromFile pathToFile = sednaQuery pathToFile
 
 sednaQueryFromString :: Query -> Transaction ()
-sednaQueryFromString queryString = sednaQuery queryString 
+sednaQueryFromString queryString = sednaQuery queryString
 
