@@ -28,7 +28,7 @@ sednaGetQueryResult = do TransactionEnv conn _ _ <- getTransactionEnv
 
 
 --------------------------------------------------------------------------------
-sednaQuery :: String -> Transaction ()
+sednaQuery :: Query -> Transaction ()
 sednaQuery query = do 
   TransactionEnv conn _ _ <- getTransactionEnv 
   response                <- liftIO $ sednaExecute conn query 
