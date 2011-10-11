@@ -1,6 +1,5 @@
 module Database.SednaDB.SednaBindings
-    ( SednaConnection
-    , sednaNext
+    ( sednaNext
     , sednaGetData
     , sednaConnect
     , sednaCloseConnection

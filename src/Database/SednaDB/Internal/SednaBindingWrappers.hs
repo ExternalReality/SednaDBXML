@@ -1,6 +1,6 @@
 module Database.SednaDB.Internal.SednaBindingWrappers 
     ( sednaGetResultString
-    , sednaQuery
+    , sednaQueryFromString
     , sednaQueryFromFile
     , sednaLoadFile
     ) where
@@ -17,17 +17,18 @@ import Prelude hiding             (replicate,concat)
 import Data.Iteratee as I hiding  (mapM_, peek)
 import Data.Iteratee.IO
 
-import Database.SednaDB.SednaExceptions
 import Database.SednaDB.SednaBindings
+import Database.SednaDB.SednaExceptions
+import Database.SednaDB.SednaTypes
 import Database.SednaDB.Internal.SednaResponseCodes
 
+--------------------------------------------------------------------------------
+sednaGetResultString :: Transaction QueryResult
+sednaGetResultString = do TransactionEnv conn _ _ <- getTransactionEnv
+                          liftIO $ procItemStream conn 8 getXMLData
 
 --------------------------------------------------------------------------------
-sednaGetResultString :: SednaConnection -> IO String
-sednaGetResultString conn = procItemStream conn 8 getXMLData
-
---------------------------------------------------------------------------------
-getXMLData :: (Monad m) => Iteratee [ByteString] m String
+getXMLData :: (Monad m) => Iteratee [ByteString] m QueryResult
 getXMLData = icont (step C.empty) Nothing
     where
       step acc (Chunk bs) 
@@ -88,21 +89,30 @@ loadXMLBytes conn doc coll =  liftIO (sednaBegin conn) >> liftI step
          _                 -> throw SednaFailedException
 
 --------------------------------------------------------------------------------
-sednaLoadFile :: SednaConnection
-              -> String
-              -> String
-              -> String
-              -> IO ()
-sednaLoadFile conn file doc coll = do
-  iteratee <- enumFile 8 file $ loadXMLBytes conn doc coll
-  run iteratee
+sednaLoadFile :: String -> Transaction ()
+sednaLoadFile file = do
+   (TransactionEnv conn coll doc) <- getTransactionEnv
+   iteratee                       <- enumFile 8 file $ loadXMLBytes 
+                                                       conn 
+                                                       doc 
+                                                       coll
+   run iteratee
 
 --------------------------------------------------------------------------------
-sednaQuery :: String -> IO ()
-sednaQuery = undefined
+sednaQuery :: String -> Transaction ()
+sednaQuery query = do 
+  TransactionEnv conn _ _ <- getTransactionEnv 
+  response                <- liftIO $ sednaExecute conn query 
+  case response of
+    QueryFailed    -> throw SednaQueryFailedException
+    QuerySucceeded -> return ()
+    _              -> throw SednaFailedException 
+    
 
 --------------------------------------------------------------------------------
-sednaQueryFromFile :: String -> IO ()
-sednaQueryFromFile = undefined
+sednaQueryFromFile :: FilePath -> Transaction ()
+sednaQueryFromFile pathToFile = sednaQuery pathToFile
 
---------------------------------------------------------------------------------
+sednaQueryFromString :: Query -> Transaction ()
+sednaQueryFromString queryString = sednaQuery queryString 
+
