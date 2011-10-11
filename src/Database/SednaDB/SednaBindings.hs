@@ -1,23 +1,23 @@
 module Database.SednaDB.SednaBindings
-    ( sednaNext
-    , sednaGetData
-    , sednaGetResultString
-    , sednaConnect
+    ( sednaBegin
     , sednaCloseConnection
-    , sednaBegin
-    , sednaRollBack
     , sednaCommit
+    , sednaConnect
+    , sednaEndLoadData
     , sednaExecute
     , sednaExecuteLong
-    , sednaLoadData
-    , sednaTransactionStatus
-    , sednaShowTime
-    , sednaGetLastErrorMsg
     , sednaGetConnectionAttr
-    , sednaSetConnectionAttr
+    , sednaGetData
     , sednaGetLastErrorCode
+    , sednaGetLastErrorMsg
+    , sednaGetResultString
+    , sednaLoadData
     , sednaResetAllConnectionAttr
-    , sednaEndLoadData
+    , sednaRollBack
+    , sednaSetConnectionAttr
+    , sednaShowTime
+    , sednaTransactionStatus
+    , sednaNext
     ) where
 
 --------------------------------------------------------------------------------
