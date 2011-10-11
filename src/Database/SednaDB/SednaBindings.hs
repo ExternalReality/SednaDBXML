@@ -1,6 +1,7 @@
 module Database.SednaDB.SednaBindings
     ( sednaNext
     , sednaGetData
+    , sednaGetResultString
     , sednaConnect
     , sednaCloseConnection
     , sednaBegin
@@ -27,20 +28,24 @@ import Foreign.C.String
 import Foreign.C.Types
 import Prelude hiding             (replicate,concat)
 import qualified Data.Map as DM   (fromList, lookup)
+import Data.Iteratee as I hiding (mapM_, peek)
+import Data.Iteratee.IO
+import Control.Monad.Trans
+import Data.ByteString.Char8 as C
+import Control.Exception
 
 import Database.SednaDB.SednaTypes
 import Database.SednaDB.Internal.SednaCBindings
 import Database.SednaDB.Internal.SednaConnectionAttributes
 import Database.SednaDB.Internal.SednaResponseCodes
-
-
+import Database.SednaDB.SednaExceptions
 --------------------------------------------------------------------------------
-sednaConnect :: String
-             -> String
-             -> String
-             -> String
+sednaConnect :: URL
+             -> DBName
+             -> UserName
+             -> Password
              -> IO (SednaResponseCode, SednaConnection)
-sednaConnect url dbname login password  =
+sednaConnect url dbname login password =
   do
     conn      <- malloc
     cUrl      <- newCString url
@@ -84,18 +89,18 @@ sednaCommit = withSednaConnection c'SEcommit
 --------------------------------------------------------------------------------
 sednaExecuteAction :: (SednaConnection -> CString -> IO CInt)
                    -> SednaConnection
-                   -> String
+                   -> Query
                    -> IO SednaResponseCode
 sednaExecuteAction sednaQueryAction conn query = do
   resultCode <- withCString query $ sednaQueryAction conn
   return $ fromCConstant resultCode
 
 --------------------------------------------------------------------------------
-sednaExecuteLong :: SednaConnection -> String -> IO SednaResponseCode
+sednaExecuteLong :: SednaConnection -> Query -> IO SednaResponseCode
 sednaExecuteLong = sednaExecuteAction c'SEexecuteLong
 
 --------------------------------------------------------------------------------
-sednaExecute :: SednaConnection -> String -> IO SednaResponseCode
+sednaExecute :: SednaConnection -> Query -> IO SednaResponseCode
 sednaExecute = sednaExecuteAction c'SEexecute
 
 --------------------------------------------------------------------------------
@@ -128,8 +133,8 @@ sednaGetData conn size = useAsCStringLen (BS.replicate size 0) loadData
 --------------------------------------------------------------------------------
 sednaLoadData :: SednaConnection
               -> ByteString
-              -> String
-              -> String
+              -> Document
+              -> Collection
               -> IO SednaResponseCode
 sednaLoadData conn buff docName colName = do
   useAsCStringLen buff loadData
@@ -221,3 +226,46 @@ sednaGetConnectionAttr conn connAttr =
 --------------------------------------------------------------------------------
 sednaResetAllConnectionAttr :: SednaConnection -> IO SednaResponseCode
 sednaResetAllConnectionAttr = withSednaConnection c'SEresetAllConnectionAttr
+
+--------------------------------------------------------------------------------
+sednaGetResultString :: SednaConnection -> IO QueryResult
+sednaGetResultString conn = procItemStream conn 8 getXMLData
+
+--------------------------------------------------------------------------------
+getXMLData :: (Monad m) => Iteratee [ByteString] m QueryResult
+getXMLData = icont (step C.empty) Nothing
+    where
+      step acc (Chunk bs) 
+          | bs == []  = icont (step acc) Nothing
+          | otherwise = icont (step $ C.append acc (C.concat $ bs)) Nothing
+      step acc (EOF _)                = idone (C.unpack acc) (EOF Nothing)
+
+--------------------------------------------------------------------------------
+procItemStream :: SednaConnection ->  Int -> Iteratee [ByteString] IO a -> IO a
+procItemStream conn size iter = step iter
+    where step iter' = do
+            iter'' <- enumItemChunked conn size iter' >>= run
+            res    <- sednaNext conn
+            case res of
+              NextItemSucceeded -> step iter''
+              ResultEnd         -> run iter''
+              NextItemFailed    -> throw SednaNextItemFailedException
+              _                 -> throw SednaFailedException
+
+--------------------------------------------------------------------------------
+enumItemChunked  :: SednaConnection
+                 -> Int
+                 -> Iteratee [ByteString] IO a
+                 -> IO (Iteratee ByteString IO (Iteratee [ByteString] IO a))
+enumItemChunked conn size = (enumItem conn size) .  I.group size
+
+--------------------------------------------------------------------------------
+enumItem :: SednaConnection -> Int -> Enumerator ByteString IO a
+enumItem conn size = enumFromCallback cb ()
+    where
+      cb () = do
+        (code, result) <- sednaGetData conn size
+        case code of
+          OperationSucceeded -> return $ Right ((True, ()), result)
+          ResultEnd          -> return $ Right ((False, ()), result)
+          _                  -> throw SednaFailedException

@@ -23,48 +23,9 @@ import Database.SednaDB.SednaTypes
 import Database.SednaDB.Internal.SednaResponseCodes
 
 --------------------------------------------------------------------------------
-sednaGetResultString :: Transaction QueryResult
-sednaGetResultString = do TransactionEnv conn _ _ <- getTransactionEnv
-                          liftIO $ procItemStream conn 8 getXMLData
-
---------------------------------------------------------------------------------
-getXMLData :: (Monad m) => Iteratee [ByteString] m QueryResult
-getXMLData = icont (step C.empty) Nothing
-    where
-      step acc (Chunk bs) 
-          | bs == []  = icont (step acc) Nothing
-          | otherwise = icont (step $ C.append acc (C.concat $ bs)) Nothing
-      step acc (EOF _)                = idone (C.unpack acc) (EOF Nothing)
-
---------------------------------------------------------------------------------
-procItemStream :: SednaConnection ->  Int -> Iteratee [ByteString] IO a -> IO a
-procItemStream conn size iter = step iter
-    where step iter' = do
-            iter'' <- enumItemChunked conn size iter' >>= run
-            res    <- sednaNext conn
-            case res of
-              NextItemSucceeded -> step iter''
-              ResultEnd         -> run iter''
-              NextItemFailed    -> throw SednaNextItemFailedException
-              _                 -> throw SednaFailedException
-
---------------------------------------------------------------------------------
-enumItemChunked  :: SednaConnection
-                 -> Int
-                 -> Iteratee [ByteString] IO a
-                 -> IO (Iteratee ByteString IO (Iteratee [ByteString] IO a))
-enumItemChunked conn size = (enumItem conn size) .  I.group size
-
---------------------------------------------------------------------------------
-enumItem :: SednaConnection -> Int -> Enumerator ByteString IO a
-enumItem conn size = enumFromCallback cb ()
-    where
-      cb () = do
-        (code, result) <- sednaGetData conn size
-        case code of
-          OperationSucceeded -> return $ Right ((True, ()), result)
-          ResultEnd          -> return $ Right ((False, ()), result)
-          _                  -> throw SednaFailedException
+sednaGetQueryResult :: Transaction (IO QueryResult)
+sednaGetQueryResult = do TransactionEnv conn _ _ <- getTransactionEnv
+                         return $ sednaGetResultString conn 
 
 --------------------------------------------------------------------------------
 loadXMLBytes:: MonadIO m => SednaConnection

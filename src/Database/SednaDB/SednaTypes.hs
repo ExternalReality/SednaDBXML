@@ -8,6 +8,10 @@ module Database.SednaDB.SednaTypes
     , Document
     , Collection
     , runTransaction
+    , URL
+    , Password
+    , DBName
+    , UserName
     ) where
 
 --------------------------------------------------------------------------------
@@ -18,8 +22,17 @@ import Foreign (Ptr)
 import Database.SednaDB.Internal.SednaCBindings (C'SednaConnection)
 
 --------------------------------------------------------------------------------
-type Collection      = String
-type Document        = String
+type URL = String 
+
+--------------------------------------------------------------------------------
+type DBName = String
+
+--------------------------------------------------------------------------------
+type UserName = String
+type Password = String
+--------------------------------------------------------------------------------
+type Collection = String
+type Document   = String
 
 --------------------------------------------------------------------------------
 type SednaConnection = Ptr C'SednaConnection
