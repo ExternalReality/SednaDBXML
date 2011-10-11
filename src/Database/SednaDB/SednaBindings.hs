@@ -40,6 +40,7 @@ import Database.SednaDB.Internal.SednaCBindings
 import Database.SednaDB.Internal.SednaConnectionAttributes
 import Database.SednaDB.Internal.SednaResponseCodes
 import Database.SednaDB.SednaExceptions
+
 --------------------------------------------------------------------------------
 sednaConnect :: URL
              -> DBName
@@ -270,6 +271,7 @@ enumItem conn size = enumFromCallback cb ()
           OperationSucceeded -> return $ Right ((True, ()), result)
           ResultEnd          -> return $ Right ((False, ()), result)
           _                  -> throw SednaFailedException
+
 --------------------------------------------------------------------------------
 loadXMLBytes:: MonadIO m => SednaConnection
             -> String
