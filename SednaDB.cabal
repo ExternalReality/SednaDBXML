@@ -25,6 +25,15 @@ Description:            Sedna is a free native XML database which
                         http://www.sedna.org/
 
 Category:               Database
+
+Extra-Source-Files:     LICENSE,
+                        README,
+                        licenses/sedna_headers/LICENSE
+                        test/Integration/SednaBindingTests.hs,
+                        test/fixtures/baseballleague.xml,
+                        test/runTests.hs,
+                        test/sedna-testsuite.cabal
+
 Library
   Hs-Source-Dirs:         src
   Default-Language:       Haskell98
@@ -37,8 +46,7 @@ Library
 
   Exposed-Modules:        Database.SednaDB.SednaBindings
                           Database.SednaDB.SednaExceptions
-                          Database.SednaDB.SednaTypes
-                          Database.SednaDB.Internal.SednaBindingWrappers
+                          Database.SednaDB.SednaTypes                        
                           Database.SednaDB.Internal.SednaCBindings
                           Database.SednaDB.Internal.SednaConnectionAttributes
                           Database.SednaDB.Internal.SednaResponseCodes

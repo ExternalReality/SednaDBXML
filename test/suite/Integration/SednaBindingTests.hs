@@ -1,6 +1,9 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module SednaBindingTests (bindingTests) where
+module Integration.SednaBindingTests ( connectionTests
+                                     , controlTests
+                                     , transactionTests
+                                     ) where
 
 --------------------------------------------------------------------------------
 import Control.Exception       (bracket)
@@ -13,7 +16,6 @@ import Test.HUnit
 
 import Database.SednaDB.SednaTypes
 import Database.SednaDB.SednaBindings
-import Database.SednaDB.Internal.SednaBindingWrappers      (sednaGetResultString)
 import Database.SednaDB.Internal.SednaConnectionAttributes
 import Database.SednaDB.Internal.SednaResponseCodes
 
@@ -201,6 +203,3 @@ transactionTests = TestList [ testBeginTransaction
                             , testLoadRetrieveData
                             ]
 
---------------------------------------------------------------------------------
-bindingTests :: Test
-bindingTests = TestList [connectionTests, controlTests, transactionTests]

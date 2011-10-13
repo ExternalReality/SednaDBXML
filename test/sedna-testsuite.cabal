@@ -1,0 +1,19 @@
+Name:                   sedna-testsuite
+Version:                0.0.0
+Build-Type:             Simple
+Cabal-Version:          >= 1.6  
+
+Executable testsuite
+  Hs-Source-Dirs:       suite
+  Main-Is:              TestSuite.hs
+
+  Build-Depends:        base >= 4 && < 5,
+                        HUnit >= 1.2 && < 2,
+                        test-framework >= 0.3.1 && <0.5,
+                        test-framework-hunit >= 0.2.5 && < 0.3,
+                        process,
+                        bytestring,
+                        SednaDB
+    
+  ghc-options:          -Wall -fwarn-tabs -funbox-strict-fields -threaded
+                        -fno-warn-unused-do-bind
