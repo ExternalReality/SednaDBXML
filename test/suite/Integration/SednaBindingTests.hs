@@ -64,7 +64,7 @@ connectionTest connFun msg succVal = testCase msg $ sednaDBTest $
 
 --------------------------------------------------------------------------------
 testOpenConnection :: Test
-testOpenConnection = testCase "Test connection initialization." $
+testOpenConnection = testCase "Test connection initialization" $
                      do
                        (status, conn) <- setup
                        result         <- assertEqual
@@ -83,24 +83,24 @@ testCloseConnection =  connectionTest sednaCloseConnection
 --------------------------------------------------------------------------------
 testBeginTransaction :: Test
 testBeginTransaction = connectionTest sednaBegin
-                                      "Test transaction initialization."
+                                      "Test transaction initialization"
                                       BeginTransactionSucceeded
 
 --------------------------------------------------------------------------------
 testSetConnectionAttr :: Test
 testSetConnectionAttr =
-  testCase "Test setting of connection attributes." $ sednaDBTest
+  testCase "Test setting of connection attributes" $ sednaDBTest
                (\(_,conn) ->
                  do
                    result <- sednaSetConnectionAttr conn autoCommitOff
-                   assertEqual "Testing set attriubute value funtionality."
+                   assertEqual "Testing set attriubute value funtionality"
                                 SetAttributeSucceeded
                                 result)
 
 --------------------------------------------------------------------------------
 testGetConnectionAttr :: Test
 testGetConnectionAttr =
-  testCase "Test retrieval of connection attributes." $ sednaDBTest
+  testCase "Test retrieval of connection attributes" $ sednaDBTest
    (\(_,conn) ->
      do
        (resultCode, result) <- sednaGetConnectionAttr conn attrAutoCommit
@@ -114,7 +114,7 @@ testGetConnectionAttr =
 --------------------------------------------------------------------------------
 testLoadData :: Test
 testLoadData =
- testCase "Test loading of XML Data." $ sednaDBTest
+ testCase "Test loading of XML Data" $ sednaDBTest
    (\(_,conn) -> do
       sednaBegin conn
       resultCode <- sednaLoadData conn
@@ -122,7 +122,7 @@ testLoadData =
                     "testdoc"
                     "testcollection"
       sednaEndLoadData conn
-      assertEqual "Testing proper loading of chunk data."
+      assertEqual "Testing proper loading of chunk data"
                   DataChunkLoaded
                   resultCode)
 
@@ -136,12 +136,12 @@ testLoadData =
 
 --------------------------------------------------------------------------------
 testExecuteQuery :: Test
-testExecuteQuery = testCase "Test execution of query." $ sednaDBTest $
+testExecuteQuery = testCase "Test execution of query" $ sednaDBTest $
                  (\(_,conn) -> do
                    sednaBegin conn
 
                    queryExecutionStatus <- sednaExecute conn "doc('$documents')"
-                   assert <- assertEqual "Testing proper execution of valid query."
+                   assert <- assertEqual "Testing proper execution of valid query"
                                queryExecutionStatus
                                QuerySucceeded
                    sednaCommit conn
@@ -150,7 +150,7 @@ testExecuteQuery = testCase "Test execution of query." $ sednaDBTest $
 --------------------------------------------------------------------------------
 testLoadRetrieveData :: Test
 testLoadRetrieveData =
-    testCase "Test loading and retrieval of XML data."$ sednaDBTest $
+    testCase "Test loading and retrieval of XML data"$ sednaDBTest $
                  (\(_,conn) -> do
                     let xmlData = pack "<?xml version=\"1.0\" standalone=\"yes\"?><note>Test must have Failed :-( </note>"
 
