@@ -9,11 +9,10 @@ module Integration.SednaBindingTests ( connectionTests
 import Control.Exception       (bracket)
 import Data.ByteString.Char8   (pack, unpack)
 import Foreign                 (free)
-import System.Exit             (ExitCode)
-import System.Process          (runCommand, waitForProcess, readProcess)
+import System.Process          (readProcess)
 
 import Test.HUnit hiding (Test)
-import Test.Framework (defaultMain, Test, testGroup)
+import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit 
 
 import Database.SednaDB.SednaTypes
@@ -22,15 +21,18 @@ import Database.SednaDB.Internal.SednaConnectionAttributes
 import Database.SednaDB.Internal.SednaResponseCodes
 
 --------------------------------------------------------------------------------
-dbName = "integrationTestDataBase6"
+dbName :: [Char]
+dbName = "IntegrationTestDataBase6"
 
 --------------------------------------------------------------------------------
+bringUpDB :: IO String
 bringUpDB = do
               readProcess "se_gov" [] "/dev/null"
               readProcess "se_cdb"[dbName] "/dev/null"
               readProcess "se_sm" [dbName] "/dev/null"
 
 --------------------------------------------------------------------------------
+bringDownDB :: IO String
 bringDownDB = do
                 readProcess "se_smsd" [dbName] "/dev/null"
                 readProcess "se_ddb"  [dbName] "/dev/null"
@@ -42,6 +44,7 @@ setup = do
          bringUpDB
          sednaConnect "localhost" dbName "SYSTEM" "MANAGER"
 
+tearDown :: (t, SednaConnection) -> IO String
 tearDown = \(_, conn) ->
   do
     free conn
@@ -68,7 +71,7 @@ testOpenConnection = testCase "Test connection initialization" $
                      do
                        (status, conn) <- setup
                        result         <- assertEqual
-                                           "Test opening of connection."
+                                           "Test opening of connection"
                                            SessionOpen
                                            status
                        tearDown(status, conn)
@@ -77,7 +80,7 @@ testOpenConnection = testCase "Test connection initialization" $
 --------------------------------------------------------------------------------
 testCloseConnection :: Test
 testCloseConnection =  connectionTest sednaCloseConnection
-                                      "Test closing of connection."
+                                      "Test connection termination"
                                        SessionClosed
 
 --------------------------------------------------------------------------------
@@ -141,11 +144,11 @@ testExecuteQuery = testCase "Test execution of query" $ sednaDBTest $
                    sednaBegin conn
 
                    queryExecutionStatus <- sednaExecute conn "doc('$documents')"
-                   assert <- assertEqual "Testing proper execution of valid query"
-                               queryExecutionStatus
-                               QuerySucceeded
+                   assertion <- assertEqual "Testing proper execution of valid query"
+                                queryExecutionStatus
+                                QuerySucceeded
                    sednaCommit conn
-                   return assert)
+                   return assertion)
 
 --------------------------------------------------------------------------------
 testLoadRetrieveData :: Test
