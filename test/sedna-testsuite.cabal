@@ -15,5 +15,5 @@ Executable testsuite
                         bytestring,
                         SednaDB
     
-  ghc-options:          -Wall -fwarn-tabs -funbox-strict-fields -threaded
+  Ghc-Options:          -Wall -fwarn-tabs -funbox-strict-fields -threaded
                         -fno-warn-unused-do-bind
