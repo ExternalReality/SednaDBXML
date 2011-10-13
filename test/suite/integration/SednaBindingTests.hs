@@ -1,6 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Test.Integration.SednaBindingTests (bindingTests) where
+module SednaBindingTests (bindingTests) where
 
 --------------------------------------------------------------------------------
 import Control.Exception       (bracket)
