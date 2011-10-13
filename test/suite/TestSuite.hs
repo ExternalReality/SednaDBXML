@@ -10,7 +10,7 @@ import Integration.SednaBindingTests
 -------------------------------------------------------------------------------
 main :: IO ()
 main = defaultMain tests
-    where tests = hUnitTestToTests $ TestList [ connectionTests
-                                              , controlTests
-                                              , transactionTests
-                                              ]  
+    where tests = [ connectionTests
+                  , controlTests
+                  , transactionTests
+                  ]  

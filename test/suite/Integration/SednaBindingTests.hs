@@ -12,7 +12,9 @@ import Foreign                 (free)
 import System.Exit             (ExitCode)
 import System.Process          (runCommand, waitForProcess, readProcess)
 
-import Test.HUnit
+import Test.HUnit hiding (Test)
+import Test.Framework (defaultMain, Test, testGroup)
+import Test.Framework.Providers.HUnit 
 
 import Database.SednaDB.SednaTypes
 import Database.SednaDB.SednaBindings
@@ -55,18 +57,18 @@ sednaDBTest = bracket setup tearDown
 -- against a succes value.
 
 connectionTest :: (Show a, Eq a) => (SednaConnection -> IO a) -> String -> a -> Test
-connectionTest connFun msg succVal = TestCase $ sednaDBTest $
+connectionTest connFun msg succVal = testCase msg $ sednaDBTest $
     (\(_ , conn) -> do
        result <- connFun $ conn
        assertEqual msg succVal result)
 
 --------------------------------------------------------------------------------
 testOpenConnection :: Test
-testOpenConnection = TestCase $
+testOpenConnection = testCase "Test connection initialization." $
                      do
                        (status, conn) <- setup
                        result         <- assertEqual
-                                           "Testing connection initialization."
+                                           "Test opening of connection."
                                            SessionOpen
                                            status
                        tearDown(status, conn)
@@ -75,19 +77,19 @@ testOpenConnection = TestCase $
 --------------------------------------------------------------------------------
 testCloseConnection :: Test
 testCloseConnection =  connectionTest sednaCloseConnection
-                                      "Testing connection closure."
+                                      "Test closing of connection."
                                        SessionClosed
 
 --------------------------------------------------------------------------------
 testBeginTransaction :: Test
 testBeginTransaction = connectionTest sednaBegin
-                                      "Testing transaction initialization."
+                                      "Test transaction initialization."
                                       BeginTransactionSucceeded
 
 --------------------------------------------------------------------------------
 testSetConnectionAttr :: Test
 testSetConnectionAttr =
-  TestCase $ sednaDBTest
+  testCase "Test setting of connection attributes." $ sednaDBTest
                (\(_,conn) ->
                  do
                    result <- sednaSetConnectionAttr conn autoCommitOff
@@ -98,7 +100,7 @@ testSetConnectionAttr =
 --------------------------------------------------------------------------------
 testGetConnectionAttr :: Test
 testGetConnectionAttr =
-  TestCase $ sednaDBTest
+  testCase "Test retrieval of connection attributes." $ sednaDBTest
    (\(_,conn) ->
      do
        (resultCode, result) <- sednaGetConnectionAttr conn attrAutoCommit
@@ -112,7 +114,7 @@ testGetConnectionAttr =
 --------------------------------------------------------------------------------
 testLoadData :: Test
 testLoadData =
- TestCase $ sednaDBTest
+ testCase "Test loading of XML Data." $ sednaDBTest
    (\(_,conn) -> do
       sednaBegin conn
       resultCode <- sednaLoadData conn
@@ -134,7 +136,7 @@ testLoadData =
 
 --------------------------------------------------------------------------------
 testExecuteQuery :: Test
-testExecuteQuery = TestCase $ sednaDBTest $
+testExecuteQuery = testCase "Test execution of query." $ sednaDBTest $
                  (\(_,conn) -> do
                    sednaBegin conn
 
@@ -148,7 +150,7 @@ testExecuteQuery = TestCase $ sednaDBTest $
 --------------------------------------------------------------------------------
 testLoadRetrieveData :: Test
 testLoadRetrieveData =
-    TestCase $ sednaDBTest $
+    testCase "Test loading and retrieval of XML data."$ sednaDBTest $
                  (\(_,conn) -> do
                     let xmlData = pack "<?xml version=\"1.0\" standalone=\"yes\"?><note>Test must have Failed :-( </note>"
 
@@ -189,17 +191,17 @@ testLoadRetrieveData =
 
 --------------------------------------------------------------------------------
 connectionTests :: Test
-connectionTests = TestList [testOpenConnection, testCloseConnection]
+connectionTests = testGroup "Connection Tests" [testOpenConnection, testCloseConnection]
 
 --------------------------------------------------------------------------------
 controlTests :: Test
-controlTests = TestList [testGetConnectionAttr, testSetConnectionAttr]
+controlTests = testGroup "Control Tests" [testGetConnectionAttr, testSetConnectionAttr]
 
 --------------------------------------------------------------------------------
 transactionTests :: Test
-transactionTests = TestList [ testBeginTransaction
-                            , testLoadData
-                            , testExecuteQuery
-                            , testLoadRetrieveData
-                            ]
+transactionTests = testGroup "Transaction Tests" [ testBeginTransaction
+                                                 , testLoadData       
+                                                 , testExecuteQuery   
+                                                 , testLoadRetrieveData
+                                                 ]
 
