@@ -10,6 +10,7 @@ import Control.Exception       (bracket)
 import Data.ByteString.Char8   (pack, unpack)
 import Foreign                 (free)
 import System.Process          (readProcess)
+import Text.Printf             (printf)
 
 import Test.HUnit hiding (Test)
 import Test.Framework (Test, testGroup)
@@ -19,6 +20,9 @@ import Database.SednaDB.SednaTypes
 import Database.SednaDB.SednaBindings
 import Database.SednaDB.Internal.SednaConnectionAttributes
 import Database.SednaDB.Internal.SednaResponseCodes
+
+--------------------------------------------------------------------------------
+type TestMsg = String 
 
 --------------------------------------------------------------------------------
 dbName :: [Char]
@@ -50,6 +54,15 @@ tearDown = \(_, conn) ->
     free conn
     bringDownDB
 
+
+--------------------------------------------------------------------------------
+formatMsg :: String -> String
+formatMsg rawMsg = printf "%-60s" rawMsg
+
+--------------------------------------------------------------------------------
+testCaseFMsg :: String -> Assertion -> Test
+testCaseFMsg = testCase . formatMsg
+
 --------------------------------------------------------------------------------
 sednaDBTest  :: ((SednaResponseCode, SednaConnection) -> IO c) -> IO c
 sednaDBTest = bracket setup tearDown
@@ -60,14 +73,14 @@ sednaDBTest = bracket setup tearDown
 -- against a succes value.
 
 connectionTest :: (Show a, Eq a) => (SednaConnection -> IO a) -> String -> a -> Test
-connectionTest connFun msg succVal = testCase msg $ sednaDBTest $
+connectionTest connFun msg succVal = testCaseFMsg msg $ sednaDBTest $
     (\(_ , conn) -> do
        result <- connFun $ conn
        assertEqual msg succVal result)
 
 --------------------------------------------------------------------------------
 testOpenConnection :: Test
-testOpenConnection = testCase "Test connection initialization" $
+testOpenConnection = testCaseFMsg "Test connection initialization" $
                      do
                        (status, conn) <- setup
                        result         <- assertEqual
@@ -92,7 +105,7 @@ testBeginTransaction = connectionTest sednaBegin
 --------------------------------------------------------------------------------
 testSetConnectionAttr :: Test
 testSetConnectionAttr =
-  testCase "Test setting of connection attributes" $ sednaDBTest
+  testCaseFMsg "Test setting of connection attributes" $ sednaDBTest
                (\(_,conn) ->
                  do
                    result <- sednaSetConnectionAttr conn autoCommitOff
@@ -103,7 +116,7 @@ testSetConnectionAttr =
 --------------------------------------------------------------------------------
 testGetConnectionAttr :: Test
 testGetConnectionAttr =
-  testCase "Test retrieval of connection attributes" $ sednaDBTest
+  testCaseFMsg "Test retrieval of connection attributes" $ sednaDBTest
    (\(_,conn) ->
      do
        (resultCode, result) <- sednaGetConnectionAttr conn attrAutoCommit
@@ -117,7 +130,7 @@ testGetConnectionAttr =
 --------------------------------------------------------------------------------
 testLoadData :: Test
 testLoadData =
- testCase "Test loading of XML Data" $ sednaDBTest
+ testCaseFMsg "Test loading of XML Data" $ sednaDBTest
    (\(_,conn) -> do
       sednaBegin conn
       resultCode <- sednaLoadData conn
@@ -139,7 +152,7 @@ testLoadData =
 
 --------------------------------------------------------------------------------
 testExecuteQuery :: Test
-testExecuteQuery = testCase "Test execution of query" $ sednaDBTest $
+testExecuteQuery = testCaseFMsg "Test execution of query" $ sednaDBTest $
                  (\(_,conn) -> do
                    sednaBegin conn
 
@@ -153,7 +166,7 @@ testExecuteQuery = testCase "Test execution of query" $ sednaDBTest $
 --------------------------------------------------------------------------------
 testLoadRetrieveData :: Test
 testLoadRetrieveData =
-    testCase "Test loading and retrieval of XML data"$ sednaDBTest $
+    testCaseFMsg "Test loading and retrieval of XML data"$ sednaDBTest $
                  (\(_,conn) -> do
                     let xmlData = pack "<?xml version=\"1.0\" standalone=\"yes\"?><note>Test must have Failed :-( </note>"
 
