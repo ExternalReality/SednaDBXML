@@ -30,17 +30,13 @@ dbName = "IntegrationTestDataBase6"
 
 --------------------------------------------------------------------------------
 bringUpDB :: IO String
-bringUpDB = do
-              readProcess "se_gov" [] "/dev/null"
-              readProcess "se_cdb"[dbName] "/dev/null"
-              readProcess "se_sm" [dbName] "/dev/null"
+bringUpDB = do readProcess "se_cdb"[dbName] "/dev/null"
+               readProcess "se_sm" [dbName] "/dev/null"
 
 --------------------------------------------------------------------------------
 bringDownDB :: IO String
-bringDownDB = do
-                readProcess "se_smsd" [dbName] "/dev/null"
-                readProcess "se_ddb"  [dbName] "/dev/null"
-                readProcess "se_stop" [] "/dev/null"
+bringDownDB = do readProcess "se_smsd" [dbName] "/dev/null"
+                 readProcess "se_ddb"  [dbName] "/dev/null"
 
 --------------------------------------------------------------------------------
 setup :: IO (SednaResponseCode, SednaConnection)
