@@ -2,21 +2,21 @@
 {-# LANGUAGE ExistentialQuantification #-}
 
 --------------------------------------------------------------------------------
-module Database.SednaDB.SednaExceptions 
-    ( SednaAuthenticationFailedException
-    , SednaBulkLoadFailedException
-    , SednaOpenSessionFailedException
-    , SednaCloseSessionFailedException
-    , SednaCommitTransactionFailedException
-    , SednaFailedException
-    , SednaNextItemFailedException
-    , SednaRollBackTransactionFailedException
-    , SednaTransactionException
-    , SednaBeginTransactionFailedException  
-    , SednaException 
-    , SednaQueryException
-    , SednaQueryFailedException
-    , SednaUpdateFailedException
+module Database.SednaDB.SednaExceptions            
+    ( SednaAuthenticationFailedException      (SednaAuthenticationFailedException)
+    , SednaBulkLoadFailedException            (SednaBulkLoadFailedException)
+    , SednaOpenSessionFailedException         (SednaOpenSessionFailedException)
+    , SednaCloseSessionFailedException        (SednaCloseSessionFailedException)
+    , SednaCommitTransactionFailedException   (SednaCommitTransactionFailedException)
+    , SednaFailedException                    (SednaFailedException)  
+    , SednaNextItemFailedException            (SednaNextItemFailedException)
+    , SednaRollBackTransactionFailedException (SednaRollBackTransactionFailedException)
+    , SednaTransactionException               (SednaTransactionException)
+    , SednaBeginTransactionFailedException    (SednaBeginTransactionFailedException)  
+    , SednaException                          (SednaException) 
+    , SednaQueryException                     (SednaQueryException)
+    , SednaQueryFailedException               (SednaQueryFailedException)
+    , SednaUpdateFailedException              (SednaUpdateFailedException)                          
     ) where
 
 --------------------------------------------------------------------------------
