@@ -6,8 +6,8 @@ import Integration.SednaBindingTests
 
 -------------------------------------------------------------------------------
 main :: IO ()
-main = defaultMain tests
-    where tests = [ connectionTests
-                  , controlTests
-                  , transactionTests
-                  ]  
+main = defaultMain [integrationTests]
+   
+   
+   
+   

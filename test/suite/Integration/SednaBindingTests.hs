@@ -1,9 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Integration.SednaBindingTests ( connectionTests
-                                     , controlTests
-                                     , transactionTests
-                                     ) where
+module Integration.SednaBindingTests (integrationTests) where
 
 --------------------------------------------------------------------------------
 import Control.Exception       (bracket)
@@ -14,7 +11,7 @@ import Text.Printf             (printf)
 
 import Test.HUnit hiding (Test)
 import Test.Framework (Test, testGroup)
-import Test.Framework.Providers.HUnit 
+import Test.Framework.Providers.HUnit
 
 import Database.SednaDB.SednaTypes
 import Database.SednaDB.SednaBindings
@@ -22,11 +19,11 @@ import Database.SednaDB.Internal.SednaConnectionAttributes
 import Database.SednaDB.Internal.SednaResponseCodes
 
 --------------------------------------------------------------------------------
-type TestMsg = String 
+type TestMsg = String
 
 --------------------------------------------------------------------------------
 dbName :: [Char]
-dbName = "IntegrationTestDataBase6"
+dbName = "SednaDBXMLTestDB"
 
 --------------------------------------------------------------------------------
 bringUpDB :: IO String
@@ -212,8 +209,14 @@ controlTests = testGroup "Control Tests" [testGetConnectionAttr, testSetConnecti
 --------------------------------------------------------------------------------
 transactionTests :: Test
 transactionTests = testGroup "Transaction Tests" [ testBeginTransaction
-                                                 , testLoadData       
-                                                 , testExecuteQuery   
+                                                 , testLoadData
+                                                 , testExecuteQuery
                                                  , testLoadRetrieveData
                                                  ]
 
+--------------------------------------------------------------------------------
+integrationTests :: Test
+integrationTests = testGroup "Integration Tests" [ connectionTests
+                                                 , controlTests
+                                                 , transactionTests
+                                                 ]

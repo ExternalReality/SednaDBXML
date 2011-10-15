@@ -2,11 +2,9 @@
 #include <libsedna.h>
 
 --------------------------------------------------------------------------------
-
 module Database.SednaDB.Internal.SednaCBindings where
 
 --------------------------------------------------------------------------------
-
 import Foreign
 import Foreign.C.Types
 import Foreign.C.String
@@ -14,12 +12,10 @@ import Foreign.C.String
 import Database.SednaDB.Internal.SpDefs
 
 --------------------------------------------------------------------------------
-
 #num QUERY_EXECUTION_TIME                      
 #num BULK_LOAD_PORTION
 
 --------------------------------------------------------------------------------                         
-
 #starttype struct conn_bulk_load
 #field       bulk_load_started , CChar    
 #array_field doc_name          , CChar
@@ -27,11 +23,9 @@ import Database.SednaDB.Internal.SpDefs
 #stoptype
 
 --------------------------------------------------------------------------------
-
 #callback debug_handler_t, FunPtr (<se_debug_info_type> -> CString -> IO ())
 
 --------------------------------------------------------------------------------
-
 #starttype struct SednaConnection
 #array_field  url                    , CChar
 #array_field  db_name                , CChar
@@ -69,53 +63,43 @@ import Database.SednaDB.Internal.SpDefs
 #stoptype
 
 --------------------------------------------------------------------------------
-
 #ccall SEconnect,  Ptr <SednaConnection> -> CString -> CString -> CString -> CString -> IO CInt
 #ccall SEclose,    Ptr <SednaConnection> -> IO CInt
 
 --------------------------------------------------------------------------------
-
 #ccall SEbegin,    Ptr <SednaConnection> -> IO CInt
 #ccall SErollback, Ptr <SednaConnection> -> IO CInt
 #ccall SEcommit,   Ptr <SednaConnection> -> IO CInt
 
 --------------------------------------------------------------------------------
-
 #ccall SEexecuteLong, Ptr <SednaConnection> -> CString -> IO CInt
 #ccall SEexecute,     Ptr <SednaConnection> -> CString -> IO CInt
 
 --------------------------------------------------------------------------------
- 
 #ccall SEgetData,     Ptr <SednaConnection> -> CString -> CInt -> IO CInt
 #ccall SEloadData,    Ptr <SednaConnection> -> CString -> CInt ->  CString -> CString -> IO CInt
 #ccall SEendLoadData, Ptr <SednaConnection>  -> IO CInt
 
 --------------------------------------------------------------------------------
-
 #ccall SEnext, Ptr <SednaConnection>  -> IO CInt
 
 --------------------------------------------------------------------------------
-
 #ccall SEgetLastErrorCode, Ptr <SednaConnection>  -> IO CInt
 #ccall SEgetLastErrorMsg , Ptr <SednaConnection>  -> IO CInt
 
 --------------------------------------------------------------------------------
-
 #ccall SEconnectionStatus,  Ptr <SednaConnection>  -> IO CInt
 #ccall SEtransactionStatus, Ptr <SednaConnection>  -> IO CInt
 
 --------------------------------------------------------------------------------
-
 #ccall SEshowTime , Ptr <SednaConnection>  -> IO CInt
---------------------------------------------------------------------------------
 
+--------------------------------------------------------------------------------
 #ccall SEsetConnectionAttr, Ptr <SednaConnection> -> CUInt -> Ptr () -> CInt -> IO CInt 
 #ccall SEgetConnectionAttr, Ptr <SednaConnection> -> CUInt -> Ptr () -> Ptr CInt -> IO CInt 
 
 --------------------------------------------------------------------------------
-
 #ccall SEresetAllConnectionAttr, Ptr <SednaConnection>  -> IO CInt
 
 --------------------------------------------------------------------------------
-
 #ccall SEsetDebugHandler, Ptr <SednaConnection>  -> <debug_handler_t> -> Ptr ()

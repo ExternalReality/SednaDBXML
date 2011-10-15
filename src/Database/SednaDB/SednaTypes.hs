@@ -30,6 +30,7 @@ type DBName = String
 --------------------------------------------------------------------------------
 type UserName = String
 type Password = String
+
 --------------------------------------------------------------------------------
 type Collection = String
 type Document   = String

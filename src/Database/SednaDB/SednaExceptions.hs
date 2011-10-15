@@ -1,16 +1,29 @@
 {-# LANGUAGE DeriveDataTypeable        #-}
 {-# LANGUAGE ExistentialQuantification #-}
---------------------------------------------------------------------------------
-
-module Database.SednaDB.SednaExceptions where
 
 --------------------------------------------------------------------------------
+module Database.SednaDB.SednaExceptions 
+    ( SednaAuthenticationFailedException
+    , SednaBulkLoadFailedException
+    , SednaOpenSessionFailedException
+    , SednaCloseSessionFailedException
+    , SednaCommitTransactionFailedException
+    , SednaFailedException
+    , SednaNextItemFailedException
+    , SednaRollBackTransactionFailedException
+    , SednaTransactionException
+    , SednaBeginTransactionFailedException  
+    , SednaException 
+    , SednaQueryException
+    , SednaQueryFailedException
+    , SednaUpdateFailedException
+    ) where
 
+--------------------------------------------------------------------------------
 import Control.Exception
 import Data.Typeable
 
 --------------------------------------------------------------------------------
-
 data SednaException =
     forall e . Exception e => SednaException e
            deriving Typeable
@@ -29,7 +42,6 @@ sednaExceptionFromException x = do
   cast a
   
 --------------------------------------------------------------------------------
-    
 data SednaFailedException = 
     SednaFailedException 
     deriving (Typeable, Show)
@@ -39,7 +51,6 @@ instance Exception SednaFailedException  where
     fromException = sednaExceptionFromException
 
 --------------------------------------------------------------------------------
-    
 data SednaBulkLoadFailedException = 
     SednaBulkLoadFailedException 
     deriving (Typeable, Show)
@@ -49,7 +60,6 @@ instance Exception SednaBulkLoadFailedException  where
     fromException = sednaExceptionFromException
     
 --------------------------------------------------------------------------------
-    
 data SednaNextItemFailedException = 
     SednaNextItemFailedException 
     deriving (Typeable, Show)
@@ -59,7 +69,6 @@ instance Exception SednaNextItemFailedException  where
     fromException = sednaExceptionFromException
 
 --------------------------------------------------------------------------------
-
 data SednaConnectionException = 
     forall e . Exception e => SednaConnectionException e
            deriving Typeable
@@ -80,7 +89,6 @@ sednaConnectionExceptionFromException x = do
   cast a
 
 --------------------------------------------------------------------------------
-
 data SednaOpenSessionFailedException = 
   SednaOpenSessionFailedException
   deriving (Typeable, Show)
@@ -90,7 +98,6 @@ instance Exception SednaOpenSessionFailedException  where
     fromException = sednaConnectionExceptionFromException     
 
 --------------------------------------------------------------------------------
-
 data SednaCloseSessionFailedException = 
   SednaCloseSessionFailedException
   deriving (Typeable, Show)
@@ -100,7 +107,6 @@ instance Exception SednaCloseSessionFailedException where
     fromException = sednaConnectionExceptionFromException    
     
 --------------------------------------------------------------------------------
-
 data SednaAuthenticationFailedException = 
     SednaAuthenticationFailedException 
     deriving (Typeable, Show)
@@ -110,7 +116,6 @@ instance Exception SednaAuthenticationFailedException  where
     fromException = sednaConnectionExceptionFromException    
 
 --------------------------------------------------------------------------------
-
 data SednaconnectionFailedException = 
     SednaconnectionFailedException 
     deriving (Typeable, Show)
@@ -120,7 +125,6 @@ instance Exception SednaconnectionFailedException  where
     fromException = sednaConnectionExceptionFromException 
 
 --------------------------------------------------------------------------------
-
 data SednaTransactionException = 
     forall e . Exception e => SednaTransactionException e
            deriving Typeable
@@ -141,7 +145,6 @@ sednaTransactionExceptionFromException x = do
   cast a
 
 --------------------------------------------------------------------------------
-
 data SednaBeginTransactionFailedException = 
     SednaBeginTransactionFailedException 
     deriving (Typeable, Show)
@@ -161,7 +164,6 @@ instance Exception SednaCommitTransactionFailedException  where
     fromException = sednaTransactionExceptionFromException    
 
 --------------------------------------------------------------------------------
-
 data SednaRollBackTransactionFailedException = 
     SednaRollBackTransactionFailedException 
     deriving (Typeable, Show)
@@ -171,7 +173,6 @@ instance Exception SednaRollBackTransactionFailedException  where
     fromException = sednaTransactionExceptionFromException
 
 --------------------------------------------------------------------------------
-
 data SednaQueryException = 
     forall e . Exception e => SednaQueryException e
            deriving Typeable
@@ -192,7 +193,6 @@ sednaQueryExceptionFromException x = do
   cast a
 
 --------------------------------------------------------------------------------
-  
 data SednaQueryFailedException = 
     SednaQueryFailedException 
     deriving (Typeable, Show)
@@ -202,7 +202,6 @@ instance Exception SednaQueryFailedException  where
     fromException = sednaQueryExceptionFromException
 
 --------------------------------------------------------------------------------
-    
 data SednaUpdateFailedException = 
     SednaUpdateFailedException 
     deriving (Typeable, Show)

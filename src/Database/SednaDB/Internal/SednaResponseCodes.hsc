@@ -1,11 +1,9 @@
 module Database.SednaDB.Internal.SednaResponseCodes where
 
 --------------------------------------------------------------------------------
-
 import Foreign.C.Types
 
 --------------------------------------------------------------------------------
-
 #include <libsedna.h>
 
 --------------------------------------------------------------------------------
@@ -44,7 +42,6 @@ data SednaResponseCode = OperationSucceeded
                          deriving ( Eq, Show )
 
 --------------------------------------------------------------------------------
-
 fromCConstant :: CInt -> SednaResponseCode
 fromCConstant x = case x of
   #{const SEDNA_OPERATION_SUCCEEDED}            -> OperationSucceeded
@@ -82,7 +79,6 @@ fromCConstant x = case x of
   _                                             -> error "Undefined Constant"
 
 --------------------------------------------------------------------------------
-
 toCConstant :: (Integral a) => SednaResponseCode -> a
 toCConstant x = case x of
   OperationSucceeded           ->  #{const SEDNA_OPERATION_SUCCEEDED}
