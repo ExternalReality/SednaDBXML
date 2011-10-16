@@ -13,7 +13,7 @@ Executable testsuite
                         test-framework-hunit >= 0.2.5 && < 0.3,
                         process,
                         bytestring,
-                        SednaDB
+                        sednaDBXML
     
   Ghc-Options:          -Wall -fwarn-tabs -funbox-strict-fields -threaded
                         -fno-warn-unused-do-bind

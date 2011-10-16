@@ -1,5 +1,5 @@
 Name:                   sednaDBXML
-Version:                0.1.2
+Version:                0.1.2.1
 License:                GPL-3
 Cabal-Version:          >= 1.10.0
 License-File:           LICENSE
@@ -10,18 +10,8 @@ Stability:              alpha
 Synopsis:               Sedna Native XML Binding
 
 Description:            Sedna is a free native XML database developed by the
-                        Institute for System Programming RAS. Sedna
-                        provides a full range of core database
-                        services - persistent storage, ACID
-                        transactions, security, indices, hot
-                        backup. Flexible XML processing facilities
-                        include W3C XQuery implementation, tight
-                        integration of XQuery with full-text search
-                        facilities and a node-level update
-                        language. This package provides language
-                        bindings and (will) provide a clean, sensible
-                        monadic interface to the (established)
-                        underlying C library.
+                        Institute for System Programming RAS. This
+                        package provides bindings to the C API.
 
                         Sedna Home Page:
                         http://www.sedna.org/
@@ -60,6 +50,9 @@ Library
   Include-Dirs:           include
   Includes:               libsedna.h,
                           sp_defs.h
+
+
+  Extra-Libraries:        sedna
 
   Ghc-Options:            -Wall
 

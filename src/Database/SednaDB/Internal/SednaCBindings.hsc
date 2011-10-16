@@ -84,15 +84,15 @@ import Database.SednaDB.Internal.SpDefs
 #ccall SEnext, Ptr <SednaConnection>  -> IO CInt
 
 --------------------------------------------------------------------------------
-#ccall SEgetLastErrorCode, Ptr <SednaConnection>  -> IO CInt
-#ccall SEgetLastErrorMsg , Ptr <SednaConnection>  -> IO CInt
+#ccall SEgetLastErrorCode, Ptr <SednaConnection> -> IO CInt
+#ccall SEgetLastErrorMsg,   Ptr <SednaConnection> -> IO CString
 
 --------------------------------------------------------------------------------
 #ccall SEconnectionStatus,  Ptr <SednaConnection>  -> IO CInt
 #ccall SEtransactionStatus, Ptr <SednaConnection>  -> IO CInt
 
 --------------------------------------------------------------------------------
-#ccall SEshowTime , Ptr <SednaConnection>  -> IO CInt
+#ccall SEshowTime , Ptr <SednaConnection>  -> IO CString
 
 --------------------------------------------------------------------------------
 #ccall SEsetConnectionAttr, Ptr <SednaConnection> -> CUInt -> Ptr () -> CInt -> IO CInt 

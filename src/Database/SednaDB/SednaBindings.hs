@@ -29,7 +29,7 @@ import Foreign.C.String
 import Foreign.C.Types
 import Prelude hiding             (replicate,concat)
 import qualified Data.Map as DM   (fromList, lookup)
-import Data.Iteratee as I hiding (mapM_, peek)
+import Data.Iteratee as I hiding  (mapM_, peek)
 import Data.Iteratee.IO
 import Control.Monad.Trans
 import Data.ByteString.Char8 as C
@@ -46,7 +46,7 @@ sednaConnect :: URL
              -> DBName
              -> UserName
              -> Password
-             -> IO (SednaResponseCode, SednaConnection)
+             -> IO SednaConnection
 sednaConnect url dbname login password =
   do
     conn      <- malloc
@@ -61,60 +61,70 @@ sednaConnect url dbname login password =
                              cPassword
 
     mapM_ free [cUrl,cDbname,cLogin,cPassword]
-    return (fromCConstant status, conn)
+   
+    case fromCConstant status of 
+      OpenSessionFailed  -> free conn >> throw SednaOpenSessionFailedException
+      OperationSucceeded -> return $ conn
+      _                  -> free conn >> throw SednaFailedException
+    
+--------------------------------------------------------------------------------
+sednaCloseConnection :: SednaConnection -> IO ()
+sednaCloseConnection conn = do 
+  resultCode <- c'SEclose conn  
+  free conn
+  case fromCConstant resultCode of 
+    OperationSucceeded -> return ()
+    CloseSessionFailed -> throw SednaCloseSessionFailedException
+    _                  -> throw SednaFailedException
+    
+--------------------------------------------------------------------------------
+sednaBegin :: SednaConnection -> IO ()
+sednaBegin conn = do
+  resultCode <- c'SEbegin conn
+  case fromCConstant resultCode of
+    BeginTransactionSucceeded -> return ()
+    BeginTransactionFailed    -> throw SednaBeginTransactionFailedException
+    _                         -> throw SednaFailedException
 
 --------------------------------------------------------------------------------
-withSednaConnection :: (SednaConnection ->  IO CInt)
-                       -> SednaConnection
-                       -> IO SednaResponseCode
-withSednaConnection sednaAction conn =
-  do
-    response <- sednaAction $ conn
-    return  $ fromCConstant response
-
+sednaRollBack :: SednaConnection -> IO ()
+sednaRollBack conn = do
+  resultCode <- c'SErollback conn
+  case fromCConstant resultCode of
+    RollBackTansactionSucceeded -> return ()
+    RollBackTransactionFailed   -> throw SednaRollBackTransactionFailedException
+    _                           -> throw SednaFailedException 
+                
 --------------------------------------------------------------------------------
-sednaCloseConnection :: SednaConnection -> IO SednaResponseCode
-sednaCloseConnection conn = do resultCode <- withSednaConnection c'SEclose conn  
-                               free conn
-                               return resultCode 
-
---------------------------------------------------------------------------------
-sednaBegin :: SednaConnection -> IO SednaResponseCode
-sednaBegin = withSednaConnection c'SEbegin
-
---------------------------------------------------------------------------------
-sednaRollBack :: SednaConnection -> IO SednaResponseCode
-sednaRollBack = withSednaConnection c'SErollback
-
---------------------------------------------------------------------------------
-sednaCommit :: SednaConnection -> IO SednaResponseCode
-sednaCommit = withSednaConnection c'SEcommit
+sednaCommit :: SednaConnection -> IO ()
+sednaCommit conn = do
+  resultCode <- c'SEcommit conn
+  case fromCConstant resultCode of
+    CommitTransactionSucceeded -> return ()
+    CommitTransactionFailed    -> throw SednaCommitTransactionFailedException
+    _                          -> throw SednaFailedException
 
 --------------------------------------------------------------------------------
 sednaExecuteAction :: (SednaConnection -> CString -> IO CInt)
                    -> SednaConnection
                    -> Query
-                   -> IO SednaResponseCode
+                   -> IO ()
 sednaExecuteAction sednaQueryAction conn query = do
   resultCode <- withCString query $ sednaQueryAction conn
-  return $ fromCConstant resultCode
+  case fromCConstant resultCode of
+    QuerySucceeded -> return ()
+    QueryFailed    -> throw SednaQueryFailedException
+    _              -> throw SednaFailedException
 
 --------------------------------------------------------------------------------
-sednaExecuteLong :: SednaConnection -> Query -> IO SednaResponseCode
+sednaExecuteLong :: SednaConnection -> Query -> IO ()
 sednaExecuteLong = sednaExecuteAction c'SEexecuteLong
 
 --------------------------------------------------------------------------------
-sednaExecute :: SednaConnection -> Query -> IO SednaResponseCode
+sednaExecute :: SednaConnection -> Query -> IO ()
 sednaExecute = sednaExecuteAction c'SEexecute
 
 --------------------------------------------------------------------------------
--- SednaGetData deals with an underlying c function c'SEgetData which
--- has heterogeneous response types. To remedy this, SednaGetData
--- returns an OperationSucceeded response on success when receiving
--- the number of bytes read from the underlying c function. This is
--- why you see this function returning its own response code instead
--- of simply encoding values from the response of c'SEgetData.
-
 sednaGetData :: SednaConnection -> Int -> IO (SednaResponseCode, ByteString)
 sednaGetData conn size = useAsCStringLen (BS.replicate size 0) loadData
   where
@@ -128,11 +138,11 @@ sednaGetData conn size = useAsCStringLen (BS.replicate size 0) loadData
 
       return $ (response, bytes)
         where
-          getResponse num buffSize | num > buffSize         = SednaError
-                                   | num < 0                = fromCConstant num
-                                   | num == 0               = ResultEnd
-                                   | num > 0                = OperationSucceeded
-                                   | otherwise              = SednaError
+          getResponse num buffSize | num > buffSize = SednaError
+                                   | num < 0        = fromCConstant num
+                                   | num == 0       = ResultEnd
+                                   | num > 0        = OperationSucceeded
+                                   | otherwise      = SednaError
 
 --------------------------------------------------------------------------------
 sednaLoadData :: SednaConnection
@@ -154,27 +164,34 @@ sednaLoadData conn buff docName colName = do
 
 --------------------------------------------------------------------------------
 sednaEndLoadData :: SednaConnection -> IO SednaResponseCode
-sednaEndLoadData = withSednaConnection c'SEendLoadData
-
+sednaEndLoadData conn = do
+    resultCode <- c'SEendLoadData conn
+    return $ fromCConstant resultCode
+            
 --------------------------------------------------------------------------------
 sednaNext :: SednaConnection -> IO SednaResponseCode
-sednaNext = withSednaConnection c'SEnext
-
+sednaNext conn = do
+  resultCode <- c'SEnext conn
+  return $ fromCConstant resultCode
+           
 --------------------------------------------------------------------------------
 sednaGetLastErrorCode :: SednaConnection -> IO SednaResponseCode
-sednaGetLastErrorCode = withSednaConnection c'SEgetLastErrorCode
+sednaGetLastErrorCode conn = do
+  resultCode <- c'SEgetLastErrorCode conn
+  return $ fromCConstant resultCode
 
 --------------------------------------------------------------------------------
-sednaGetLastErrorMsg :: SednaConnection -> IO SednaResponseCode
-sednaGetLastErrorMsg = withSednaConnection c'SEgetLastErrorMsg
+sednaGetLastErrorMsg :: SednaConnection -> IO String 
+sednaGetLastErrorMsg conn = peekCAString  =<< c'SEgetLastErrorMsg conn 
 
 --------------------------------------------------------------------------------
 sednaTransactionStatus :: SednaConnection -> IO SednaResponseCode
-sednaTransactionStatus = withSednaConnection c'SEtransactionStatus
+sednaTransactionStatus conn = do resultCode <- c'SEtransactionStatus conn
+                                 return $ fromCConstant resultCode
 
 --------------------------------------------------------------------------------
-sednaShowTime :: SednaConnection -> IO SednaResponseCode
-sednaShowTime = withSednaConnection c'SEshowTime
+sednaShowTime :: SednaConnection -> IO String
+sednaShowTime conn = peekCAString =<< c'SEshowTime conn
 
 --------------------------------------------------------------------------------
 sednaConnectionAttributeMap :: SednaConnAttrValue -> Maybe SednaConnectionAttr
@@ -196,26 +213,28 @@ sednaConnectionAttributeMap attr = DM.lookup attr attrValToAttrMap
 --------------------------------------------------------------------------------
 sednaSetConnectionAttr :: SednaConnection
                        -> SednaConnAttrValue
-                       -> IO SednaResponseCode
+                       -> IO ()
 sednaSetConnectionAttr conn attrVal =
   alloca (\ptrAttrVal -> do
-             let connAttr = fromIntegral        $
-                            sednaConnectionAttr $
-                            fromJust (sednaConnectionAttributeMap attrVal)
-             let attr     = sednaConnAttrValue attrVal
-             let size     = fromIntegral $ sizeOf attr
-             poke ptrAttrVal attr
-             response <- c'SEsetConnectionAttr
-                         conn
-                         connAttr
-                         (castPtr ptrAttrVal)
-                         size
-             return $ fromCConstant response)
+            let connAttr = fromIntegral        $
+                           sednaConnectionAttr $
+                           fromJust (sednaConnectionAttributeMap attrVal)
+            let attr     = sednaConnAttrValue attrVal
+            let size     = fromIntegral $ sizeOf attr
+            poke ptrAttrVal attr
+            response <- c'SEsetConnectionAttr
+                        conn
+                        connAttr
+                        (castPtr ptrAttrVal)
+                        size
+            case fromCConstant response of
+              SetAttributeSucceeded  -> return ()
+              _                      -> throw SednaFailedException)
 
 --------------------------------------------------------------------------------
 sednaGetConnectionAttr :: SednaConnection
-                          -> SednaConnectionAttr
-                          -> IO (SednaResponseCode, SednaConnAttrValue)
+                       -> SednaConnectionAttr
+                       -> IO (SednaResponseCode, SednaConnAttrValue)
 sednaGetConnectionAttr conn connAttr =
   alloca (\sizePtr -> do
              let attr = fromIntegral $ sednaConnectionAttr connAttr
@@ -228,8 +247,12 @@ sednaGetConnectionAttr conn connAttr =
              return (fromCConstant resultCode, SednaConnAttrValue response))
 
 --------------------------------------------------------------------------------
-sednaResetAllConnectionAttr :: SednaConnection -> IO SednaResponseCode
-sednaResetAllConnectionAttr = withSednaConnection c'SEresetAllConnectionAttr
+sednaResetAllConnectionAttr :: SednaConnection -> IO ()
+sednaResetAllConnectionAttr conn = do
+  resultCode <- c'SEresetAllConnectionAttr conn
+  case fromCConstant resultCode of
+    ResetAttributeSucceeded -> return ()
+    _                       -> throw SednaFailedException
 
 --------------------------------------------------------------------------------
 sednaGetResultString :: SednaConnection -> IO QueryResult
