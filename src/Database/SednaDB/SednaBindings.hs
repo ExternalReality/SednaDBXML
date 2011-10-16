@@ -74,7 +74,9 @@ withSednaConnection sednaAction conn =
 
 --------------------------------------------------------------------------------
 sednaCloseConnection :: SednaConnection -> IO SednaResponseCode
-sednaCloseConnection = withSednaConnection c'SEclose
+sednaCloseConnection conn = do resultCode <- withSednaConnection c'SEclose conn  
+                               free conn
+                               return resultCode 
 
 --------------------------------------------------------------------------------
 sednaBegin :: SednaConnection -> IO SednaResponseCode
