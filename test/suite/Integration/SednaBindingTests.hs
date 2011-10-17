@@ -1,11 +1,11 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Integration.SednaBindingTests (integrationTests) where 
+module Integration.SednaBindingTests (integrationTests) where
 
 --------------------------------------------------------------------------------
 import Prelude hiding          (catch)
-import Control.Exception       (bracket, catch, try)
+import Control.Exception      
 import Data.ByteString.Char8   (pack, unpack)
 import Foreign                 (free)
 import System.Process          (readProcess)
@@ -61,27 +61,26 @@ testCaseFMsg = testCase . formatMsg
 sednaDBTest  :: (SednaConnection -> IO c) -> IO c
 sednaDBTest = bracket setup tearDown
 
----------------------------------------------------------------------------------- 
+----------------------------------------------------------------------------------
 connectionTest :: (SednaConnection -> IO ()) -> String -> Test
-connectionTest connFun msg = 
+connectionTest connFun msg =
     testCaseFMsg msg $
     catch (sednaDBTest connFun)
               (\(e :: SednaException) -> assertFailure $ show e)
-              
+
 --------------------------------------------------------------------------------
 testOpenConnection :: Test
-testOpenConnection = testCaseFMsg "Testing connection initialization" $ go
-    where go = do 
-            assertion <- try (sednaConnect "localhost" dbName "SYSTEM" "MANAGER") 
-            case assertion of 
-              Left  ex -> assertFailure $ show (ex :: SednaException)
-              Right _  -> return ()
-                                            
+testOpenConnection = testCaseFMsg "Testing connection initialization" go
+    where go =
+              bracket_ (bringUpDB)
+                       (bringDownDB >> assertFailure "Open Connection Failed")
+                       (sednaConnect "localhost" dbName "SYSTEM" "MANAGER" >>= free)
+
 --------------------------------------------------------------------------------
 testCloseConnection :: Test
 testCloseConnection =  connectionTest sednaCloseConnection
                                       "Test connection termination"
-  
+
  --------------------------------------------------------------------------------
 testBeginTransaction :: Test
 testBeginTransaction = connectionTest sednaBegin
@@ -91,7 +90,7 @@ testBeginTransaction = connectionTest sednaBegin
 testSetConnectionAttr :: Test
 testSetConnectionAttr =
     connectionTest (\conn -> sednaSetConnectionAttr conn autoCommitOff)
-                   "Test setting of connection attributes" 
+                   "Test setting of connection attributes"
 -- --------------------------------------------------------------------------------
 -- testGetConnectionAttr :: Test
 -- testGetConnectionAttr =
@@ -186,7 +185,7 @@ testSetConnectionAttr =
 
 -----------------------------------------------------------------------------------
 connectionTests :: Test
-connectionTests = testGroup "Connection Tests" [ testOpenConnection 
+connectionTests = testGroup "Connection Tests" [ testOpenConnection
                                                , testCloseConnection
                                                ]
 
