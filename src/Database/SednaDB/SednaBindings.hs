@@ -63,9 +63,10 @@ sednaConnect url dbname login password =
     mapM_ free [cUrl,cDbname,cLogin,cPassword]
    
     case fromCConstant status of 
-      OpenSessionFailed  -> free conn >> throw SednaOpenSessionFailedException
-      OperationSucceeded -> return $ conn
-      _                  -> free conn >> throw SednaFailedException
+      SessionOpen           -> return $ conn
+      OpenSessionFailed     -> free conn >> throw SednaOpenSessionFailedException
+      AuthenticationFailed  -> free conn >> throw SednaAuthenticationFailedException
+      _                     -> free conn >> throw SednaFailedException 
     
 --------------------------------------------------------------------------------
 sednaCloseConnection :: SednaConnection -> IO ()
@@ -73,7 +74,7 @@ sednaCloseConnection conn = do
   resultCode <- c'SEclose conn  
   free conn
   case fromCConstant resultCode of 
-    OperationSucceeded -> return ()
+    SessionClosed      -> return ()
     CloseSessionFailed -> throw SednaCloseSessionFailedException
     _                  -> throw SednaFailedException
     

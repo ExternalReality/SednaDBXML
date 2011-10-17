@@ -40,8 +40,14 @@ bringDownDB = do readProcess "se_smsd" [dbName] "/dev/null"
 --------------------------------------------------------------------------------
 setup :: IO SednaConnection
 setup = do
+         let url       = "localhost"
+         let dbname    = dbName
+         let login     = "SYSTEM"
+         let password  = "MANAGER"       
+
          bringUpDB
-         sednaConnect "localhost" dbName "SYSTEM" "MANAGER"
+         onException (sednaConnect url dbname login password)
+                     (bringDownDB)
 
 tearDown :: SednaConnection -> IO String
 tearDown = \conn ->
@@ -66,20 +72,24 @@ connectionTest :: (SednaConnection -> IO ()) -> String -> Test
 connectionTest connFun msg =
     testCaseFMsg msg $
     catch (sednaDBTest connFun)
-              (\(e :: SednaException) -> assertFailure $ show e)
+          (\(e :: SednaException) -> assertFailure $ show e)
 
 --------------------------------------------------------------------------------
 testOpenConnection :: Test
-testOpenConnection = testCaseFMsg "Testing connection initialization" go
-    where go =
-              bracket_ (bringUpDB)
-                       (bringDownDB >> assertFailure "Open Connection Failed")
-                       (sednaConnect "localhost" dbName "SYSTEM" "MANAGER" >>= free)
+testOpenConnection = testCaseFMsg "Testing connection initialization" openTest
+                           
+openTest :: IO ()
+openTest = do
+  bracketOnError (bringUpDB)
+                 (\_ -> bringDownDB >> assertFailure "Open Connection Failed")
+                 (\_ -> sednaConnect "localhost" dbName "SYSTEM" "MANAGER" >>= free)
+  bringDownDB
+  return () 
 
 --------------------------------------------------------------------------------
-testCloseConnection :: Test
-testCloseConnection =  connectionTest sednaCloseConnection
-                                      "Test connection termination"
+--testCloseConnection :: Test
+--testCloseConnection =  connectionTest sednaCloseConnection
+--                                      "Test connection termination"
 
  --------------------------------------------------------------------------------
 testBeginTransaction :: Test
@@ -91,6 +101,7 @@ testSetConnectionAttr :: Test
 testSetConnectionAttr =
     connectionTest (\conn -> sednaSetConnectionAttr conn autoCommitOff)
                    "Test setting of connection attributes"
+
 -- --------------------------------------------------------------------------------
 -- testGetConnectionAttr :: Test
 -- testGetConnectionAttr =
@@ -186,7 +197,6 @@ testSetConnectionAttr =
 -----------------------------------------------------------------------------------
 connectionTests :: Test
 connectionTests = testGroup "Connection Tests" [ testOpenConnection
-                                               , testCloseConnection
                                                ]
 
 -- --------------------------------------------------------------------------------
