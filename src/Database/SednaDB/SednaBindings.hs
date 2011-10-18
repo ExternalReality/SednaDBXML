@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+
 module Database.SednaDB.SednaBindings
     ( sednaBegin
     , sednaCloseConnection
@@ -11,7 +13,6 @@ module Database.SednaDB.SednaBindings
     , sednaGetLastErrorCode
     , sednaGetLastErrorMsg
     , sednaGetResultString
-    , sednaLoadData
     , sednaNext
     , sednaResetAllConnectionAttr
     , sednaRollBack
@@ -19,6 +20,10 @@ module Database.SednaDB.SednaBindings
     , sednaShowTime
     , sednaTransactionStatus
     , sednaLoadFile
+
+    , sednaLoadData
+
+
     ) where
 
 --------------------------------------------------------------------------------
@@ -31,6 +36,7 @@ import Prelude hiding             (replicate,concat)
 import qualified Data.Map as DM   (fromList, lookup)
 import Data.Iteratee as I hiding  (mapM_, peek)
 import Data.Iteratee.IO
+import Control.Monad
 import Control.Monad.Trans
 import Data.ByteString.Char8 as C
 import Control.Exception
@@ -235,17 +241,20 @@ sednaSetConnectionAttr conn attrVal =
 --------------------------------------------------------------------------------
 sednaGetConnectionAttr :: SednaConnection
                        -> SednaConnectionAttr
-                       -> IO (SednaResponseCode, SednaConnAttrValue)
+                       -> IO SednaConnAttrValue
 sednaGetConnectionAttr conn connAttr =
-  alloca (\sizePtr -> do
-             let attr = fromIntegral $ sednaConnectionAttr connAttr
-             resultPtr  <- malloc :: IO (Ptr CInt)
-             resultCode <- c'SEgetConnectionAttr conn
-                                                 attr
-                                                 (castPtr resultPtr)
-                                                 sizePtr
-             response   <- peek (castPtr resultPtr)
-             return (fromCConstant resultCode, SednaConnAttrValue response))
+    alloca (\sizePtr -> do
+              let attr = fromIntegral $ sednaConnectionAttr connAttr
+              responsePtr <- malloc :: IO (Ptr CInt)
+              resultCode  <- c'SEgetConnectionAttr conn
+                                                   attr
+                                                   (castPtr responsePtr)
+                                                   sizePtr
+              response <- peek (castPtr responsePtr)         
+                           
+              case fromCConstant resultCode of
+                GetAttributeSucceeded -> return (SednaConnAttrValue response)
+                _                     -> throw SednaFailedException)     
 
 --------------------------------------------------------------------------------
 sednaResetAllConnectionAttr :: SednaConnection -> IO ()

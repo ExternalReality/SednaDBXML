@@ -5,7 +5,7 @@ module Integration.SednaBindingTests (integrationTests) where
 
 --------------------------------------------------------------------------------
 import Prelude hiding          (catch)
-import Control.Exception      
+import Control.Exception
 import Data.ByteString.Char8   (pack, unpack)
 import Foreign                 (free)
 import System.Process          (readProcess)
@@ -43,7 +43,7 @@ setup = do
          let url       = "localhost"
          let dbname    = dbName
          let login     = "SYSTEM"
-         let password  = "MANAGER"       
+         let password  = "MANAGER"
 
          bringUpDB
          onException (sednaConnect url dbname login password)
@@ -77,14 +77,14 @@ connectionTest connFun msg =
 --------------------------------------------------------------------------------
 testOpenConnection :: Test
 testOpenConnection = testCaseFMsg "Testing connection initialization" openTest
-                           
+
 openTest :: IO ()
 openTest = do
   bracketOnError (bringUpDB)
                  (\_ -> bringDownDB >> assertFailure "Open Connection Failed")
                  (\_ -> sednaConnect "localhost" dbName "SYSTEM" "MANAGER" >>= free)
   bringDownDB
-  return () 
+  return ()
 
 --------------------------------------------------------------------------------
 --testCloseConnection :: Test
@@ -100,36 +100,32 @@ testBeginTransaction = connectionTest sednaBegin
 testSetConnectionAttr :: Test
 testSetConnectionAttr =
     connectionTest (\conn -> sednaSetConnectionAttr conn autoCommitOff)
-                   "Test setting of connection attributes"
+                   "Testing modification of connection attributes"
+
+---------------------------------------------------------------------------------
+testGetConnectionAttr :: Test
+testGetConnectionAttr =
+ connectionTest (\conn -> do
+                   result <- sednaGetConnectionAttr conn attrAutoCommit
+                   assertEqual "Testing attribute value response."
+                                autoCommitOff
+                                result)
+                "Testing inspection of connection attributes"
 
 -- --------------------------------------------------------------------------------
--- testGetConnectionAttr :: Test
--- testGetConnectionAttr =
---   testCaseFMsg "Test retrieval of connection attributes" $ sednaDBTest
---    (\(_,conn) ->
---      do
---        (resultCode, result) <- sednaGetConnectionAttr conn attrAutoCommit
---        assertEqual "Get attribute succeeded"
---                    GetAttributeSucceeded
---                    resultCode
---        assertEqual "Testing attribute value response."
---                    autoCommitOff
---                    result)
+testLoadData :: Test
+testLoadData =
+ testCaseFMsg "Test loading of XML Data" $ sednaDBTest
+ connectionTest (conn -> do
+                   sednaBegin conn
+                   sednaLoadData conn
+                                 (pack "<?xml version=\"1.0\" standalone=\"yes\"?>")
+                                 "testdoc"
+                                 "testcollection"
+                   sednaEndLoadData conn)
+                   "Testing proper loading of chunk data"
 
--- --------------------------------------------------------------------------------
--- testLoadData :: Test
--- testLoadData =
---  testCaseFMsg "Test loading of XML Data" $ sednaDBTest
---    (\(_,conn) -> do
---       sednaBegin conn
---       resultCode <- sednaLoadData conn
---                     (pack "<?xml version=\"1.0\" standalone=\"yes\"?>")
---                     "testdoc"
---                     "testcollection"
---       sednaEndLoadData conn
---       assertEqual "Testing proper loading of chunk data"
---                   DataChunkLoaded
---                   resultCode)
+
 
 -- --------------------------------------------------------------------------------
 -- -- testLoadFile = sednaDBTest $
@@ -199,9 +195,11 @@ connectionTests :: Test
 connectionTests = testGroup "Connection Tests" [ testOpenConnection
                                                ]
 
--- --------------------------------------------------------------------------------
--- controlTests :: Test
--- controlTests = testGroup "Control Tests" [testGetConnectionAttr, testSetConnectionAttr]
+--------------------------------------------------------------------------------
+controlTests :: Test
+controlTests = testGroup "Control Tests" [ testGetConnectionAttr
+                                         , testSetConnectionAttr
+                                         ]
 
 -- --------------------------------------------------------------------------------
 -- transactionTests :: Test
@@ -213,4 +211,6 @@ connectionTests = testGroup "Connection Tests" [ testOpenConnection
 
 --------------------------------------------------------------------------------
 integrationTests :: Test
-integrationTests = testGroup "Sedna C API Integration Tests" [ connectionTests ]
+integrationTests = testGroup "Sedna C API Integration Tests" [ connectionTests 
+                                                             , controlTests
+                                                             ]
