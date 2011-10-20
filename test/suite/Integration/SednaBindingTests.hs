@@ -24,24 +24,31 @@ import Database.SednaDB.SednaExceptions
 type TestMsg = String
 
 --------------------------------------------------------------------------------
-dbName :: [Char]
-dbName = "SednaDBXMLTestDB"
+testDBName :: [Char]
+testDBName = "SednaDBXMLTestDB"
+
+testCollName = "'testCollection'"
 
 --------------------------------------------------------------------------------
 bringUpDB :: IO String
-bringUpDB = do readProcess "se_cdb"[dbName] "/dev/null"
-               readProcess "se_sm" [dbName] "/dev/null"
+bringUpDB = do readProcess "se_cdb"[testDBName] "/dev/null"
+               readProcess "se_sm" [testDBName] "/dev/null"
+               readProcess "se_term" [ "-query"
+                                     ,"CREATE COLLECTION " ++ testCollName
+                                     , testDBName
+                                     ] 
+                                     "/dev/null"
 
 --------------------------------------------------------------------------------
 bringDownDB :: IO String
-bringDownDB = do readProcess "se_smsd" [dbName] "/dev/null"
-                 readProcess "se_ddb"  [dbName] "/dev/null"
+bringDownDB = do readProcess "se_smsd" [testDBName] "/dev/null"
+                 readProcess "se_ddb"  [testDBName] "/dev/null"
 
 --------------------------------------------------------------------------------
 setup :: IO SednaConnection
 setup = do
          let url       = "localhost"
-         let dbname    = dbName
+         let dbname    = testDBName
          let login     = "SYSTEM"
          let password  = "MANAGER"
 
@@ -52,6 +59,7 @@ setup = do
 tearDown :: SednaConnection -> IO String
 tearDown = \conn ->
   do
+    sednaCloseConnection conn
     free conn
     bringDownDB
 
@@ -82,7 +90,7 @@ openTest :: IO ()
 openTest = do
   bracketOnError (bringUpDB)
                  (\_ -> bringDownDB >> assertFailure "Open Connection Failed")
-                 (\_ -> sednaConnect "localhost" dbName "SYSTEM" "MANAGER" >>= free)
+                 (\_ -> sednaConnect "localhost" testDBName "SYSTEM" "MANAGER" >>= free)
   bringDownDB
   return ()
 
@@ -120,7 +128,7 @@ testLoadData =
                       sednaLoadData conn
                                     (pack "<?xml version=\"1.0\" standalone=\"yes\"?>")
                                     "testdoc"
-                                    "testcollection"
+                                    "testCollection"
                       sednaEndLoadData conn
                       sednaCommit conn)
                    "Testing proper loading of chunk data"
