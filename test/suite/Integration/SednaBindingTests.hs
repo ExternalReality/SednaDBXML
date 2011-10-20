@@ -112,20 +112,18 @@ testGetConnectionAttr =
                                 result)
                 "Testing inspection of connection attributes"
 
--- --------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
 testLoadData :: Test
-testLoadData =
- testCaseFMsg "Test loading of XML Data" $ sednaDBTest
- connectionTest (conn -> do
-                   sednaBegin conn
-                   sednaLoadData conn
-                                 (pack "<?xml version=\"1.0\" standalone=\"yes\"?>")
-                                 "testdoc"
-                                 "testcollection"
-                   sednaEndLoadData conn)
+testLoadData =  
+    connectionTest (\conn ->  do
+                      sednaBegin conn
+                      sednaLoadData conn
+                                    (pack "<?xml version=\"1.0\" standalone=\"yes\"?>")
+                                    "testdoc"
+                                    "testcollection"
+                      sednaEndLoadData conn
+                      sednaCommit conn)
                    "Testing proper loading of chunk data"
-
-
 
 -- --------------------------------------------------------------------------------
 -- -- testLoadFile = sednaDBTest $
@@ -202,15 +200,16 @@ controlTests = testGroup "Control Tests" [ testGetConnectionAttr
                                          ]
 
 -- --------------------------------------------------------------------------------
--- transactionTests :: Test
--- transactionTests = testGroup "Transaction Tests" [ testBeginTransaction
---                                                  , testLoadData
---                                                  , testExecuteQuery
---                                                  , testLoadRetrieveData
---                                                  ]
+transactionTests :: Test
+transactionTests = testGroup "Transaction Tests" [ testBeginTransaction
+                                                 , testLoadData
+                                                 --, testExecuteQuery
+                                                 --, testLoadRetrieveData
+                                                 ]
 
 --------------------------------------------------------------------------------
 integrationTests :: Test
 integrationTests = testGroup "Sedna C API Integration Tests" [ connectionTests 
                                                              , controlTests
+                                                             , transactionTests
                                                              ]

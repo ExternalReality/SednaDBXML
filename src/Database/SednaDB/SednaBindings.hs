@@ -20,10 +20,7 @@ module Database.SednaDB.SednaBindings
     , sednaShowTime
     , sednaTransactionStatus
     , sednaLoadFile
-
     , sednaLoadData
-
-
     ) where
 
 --------------------------------------------------------------------------------
