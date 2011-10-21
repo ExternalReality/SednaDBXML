@@ -143,60 +143,31 @@ testLoadFile =
                                     "testCollection")
     "Test loading of XML file"
 
--- --------------------------------------------------------------------------------
--- testExecuteQuery :: Test
--- testExecuteQuery = testCaseFMsg "Test execution of query" $ sednaDBTest $
---                  (\(_,conn) -> do
---                    sednaBegin conn
+--------------------------------------------------------------------------------
+testExecuteQuery :: Test
+testExecuteQuery = 
+    connectionTest (\conn -> do
+                      sednaBegin conn                                 
+                      queryExecutionStatus <- sednaExecute conn "doc('$documents')"
+                      sednaCommit conn)
+                  "Testing Proper Execution of valid query"
 
---                    queryExecutionStatus <- sednaExecute conn "doc('$documents')"
---                    assertion <- assertEqual "Testing proper execution of valid query"
---                                 queryExecutionStatus
---                                 QuerySucceeded
---                    sednaCommit conn
---                    return assertion)
+--------------------------------------------------------------------------------
+testLoadRetrieveData :: Test
+testLoadRetrieveData =
+    let xmlData = pack "<note>And the world alright with me!</note>" in
+    connectionTest (\conn -> do
+                      sednaBegin conn
+                      sednaLoadData conn xmlData "testdoc" "testCollection"
+                      sednaEndLoadData conn
+                      sednaExecute conn "doc('testdoc','testCollection')/note"
 
--- --------------------------------------------------------------------------------
--- testLoadRetrieveData :: Test
--- testLoadRetrieveData =
---     testCaseFMsg "Test loading and retrieval of XML data"$ sednaDBTest $
---                  (\(_,conn) -> do
---                     let xmlData = pack "<?xml version=\"1.0\" standalone=\"yes\"?><note>Test must have Failed :-( </note>"
-
---                     beginTransactionStatus <- sednaBegin conn
---                     assertEqual "Test begin transaction"
---                                 BeginTransactionSucceeded
---                                 beginTransactionStatus
-
---                     createCollectionStatus <- sednaExecute conn "CREATE COLLECTION 'testCollection'"
---                     assertEqual "Test query and create collection"
---                                  UpdateSucceeded
---                                  createCollectionStatus
-
---                     loadDataStatus <- sednaLoadData conn xmlData "testdoc" "testCollection"
---                     assertEqual "TestLoadData"
---                                 DataChunkLoaded
---                                 loadDataStatus
-
---                     endloadStatus <- sednaEndLoadData conn
---                     assertEqual "TestLoadData"
---                                 BulkLoadSucceeded
---                                 endloadStatus
-
---                     queryExecutionStatus <- sednaExecute conn "doc('testdoc','testCollection')"
---                     assertEqual "Test query"
---                                 QuerySucceeded
---                                 queryExecutionStatus
-
---                     queryResult <- sednaGetResultString conn
---                     assertEqual "Testing proper retrieval of query results"
---                                 (unpack xmlData)
---                                 (concat.lines $ queryResult)
-
---                     commitStatus <- sednaCommit conn
---                     assertEqual "Testing transaction commit"
---                                 CommitTransactionSucceeded
---                                 commitStatus)
+                      queryResult <- sednaGetResultString conn
+                      assertEqual "Testing proper retrieval of query results"
+                                  (unpack xmlData)
+                                  (concat.lines $ queryResult)
+                      sednaCommit conn)
+                   "Test loading and retrieval of data."
 
 -----------------------------------------------------------------------------------
 connectionTests :: Test
@@ -214,8 +185,8 @@ transactionTests :: Test
 transactionTests = testGroup "Transaction Tests" [ testBeginTransaction
                                                  , testLoadData
                                                  , testLoadFile
-                                                 --, testExecuteQuery
-                                                 --, testLoadRetrieveData
+                                                 , testExecuteQuery
+                                                 , testLoadRetrieveData
                                                  ]
 
 --------------------------------------------------------------------------------

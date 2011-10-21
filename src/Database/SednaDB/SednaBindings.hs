@@ -316,15 +316,14 @@ loadXMLBytes:: MonadIO m => SednaConnection
             -> Iteratee ByteString m ()
 loadXMLBytes conn doc coll =  liftIO (sednaBegin conn) >> liftI step
   where
-    step s@(I.Chunk xs)
+    step (I.Chunk xs)
       | xs == (C.pack "") = liftI step
       | otherwise = do
                      liftIO $ sednaLoadData conn xs doc coll
-                     liftIO (print s) >>  liftI step
+                     liftI step
          
     step stream = do
       response <- liftIO $ c'SEendLoadData conn
-      liftIO $ print =<< sednaGetLastErrorMsg conn
       case fromCConstant response of
          BulkLoadSucceeded -> liftIO  (sednaCommit conn) >> idone () stream
          BulkLoadFailed    -> throw SednaBulkLoadFailedException
