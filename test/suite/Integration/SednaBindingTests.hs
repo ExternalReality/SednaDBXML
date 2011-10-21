@@ -36,7 +36,7 @@ bringUpDB = do readProcess "se_cdb"[testDBName] "/dev/null"
                readProcess "se_term" [ "-query"
                                      ,"CREATE COLLECTION " ++ testCollName
                                      , testDBName
-                                     ] 
+                                     ]
                                      "/dev/null"
 
 --------------------------------------------------------------------------------
@@ -60,7 +60,6 @@ tearDown :: SednaConnection -> IO String
 tearDown = \conn ->
   do
     sednaCloseConnection conn
-    free conn
     bringDownDB
 
 --------------------------------------------------------------------------------
@@ -122,24 +121,27 @@ testGetConnectionAttr =
 
 ---------------------------------------------------------------------------------
 testLoadData :: Test
-testLoadData =  
+testLoadData =
     connectionTest (\conn ->  do
                       sednaBegin conn
                       sednaLoadData conn
-                                    (pack "<?xml version=\"1.0\" standalone=\"yes\"?>")
-                                    "testdoc"
+                                    (pack "<Message>Hello World!!!</Message>")
+                                    "testDoc"
                                     "testCollection"
                       sednaEndLoadData conn
                       sednaCommit conn)
                    "Testing proper loading of chunk data"
 
--- --------------------------------------------------------------------------------
--- -- testLoadFile = sednaDBTest $
--- --                (\(_,conn) -> do
--- --                   loadXMLFile conn
--- --                              "test/fixtures/baseballleague.xml"
--- --                              "testdoc3"
--- --                              "testcollection")
+--------------------------------------------------------------------------------
+testLoadFile :: Test
+testLoadFile = 
+    let testFile = "fixtures/baseballleague.xml" in
+    connectionTest (\conn -> do
+                      sednaLoadFile testFile
+                                    conn
+                                    "testdoc3"
+                                    "testCollection")
+    "Test loading of XML file"
 
 -- --------------------------------------------------------------------------------
 -- testExecuteQuery :: Test
@@ -211,13 +213,14 @@ controlTests = testGroup "Control Tests" [ testGetConnectionAttr
 transactionTests :: Test
 transactionTests = testGroup "Transaction Tests" [ testBeginTransaction
                                                  , testLoadData
+                                                 , testLoadFile
                                                  --, testExecuteQuery
                                                  --, testLoadRetrieveData
                                                  ]
 
 --------------------------------------------------------------------------------
 integrationTests :: Test
-integrationTests = testGroup "Sedna C API Integration Tests" [ connectionTests 
+integrationTests = testGroup "Sedna C API Integration Tests" [ connectionTests
                                                              , controlTests
                                                              , transactionTests
                                                              ]

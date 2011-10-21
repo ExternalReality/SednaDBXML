@@ -153,7 +153,7 @@ sednaLoadData :: SednaConnection
               -> ByteString
               -> Document
               -> Collection
-              -> IO SednaResponseCode
+              -> IO ()
 sednaLoadData conn buff docName colName = do
   useAsCStringLen buff loadData
       where
@@ -164,13 +164,18 @@ sednaLoadData conn buff docName colName = do
           cColName <- newCString colName
           response <- c'SEloadData conn buff' bytes cDocName cColName
           mapM_ free [cDocName, cColName]
-          return $ fromCConstant response
+          case fromCConstant response of
+            DataChunkLoaded -> return ()
+            _               -> throw SednaFailedException
 
 --------------------------------------------------------------------------------
-sednaEndLoadData :: SednaConnection -> IO SednaResponseCode
+sednaEndLoadData :: SednaConnection -> IO ()
 sednaEndLoadData conn = do
     resultCode <- c'SEendLoadData conn
-    return $ fromCConstant resultCode
+
+    case fromCConstant resultCode of
+         BulkLoadSucceeded -> return ()
+         _                 -> throw SednaFailedException
             
 --------------------------------------------------------------------------------
 sednaNext :: SednaConnection -> IO SednaResponseCode
@@ -314,14 +319,13 @@ loadXMLBytes conn doc coll =  liftIO (sednaBegin conn) >> liftI step
     step s@(I.Chunk xs)
       | xs == (C.pack "") = liftI step
       | otherwise = do
-        response <- liftIO $ sednaLoadData conn xs doc coll
-        if response == DataChunkLoaded
-          then liftIO (print s) >>  liftI step
-          else throw SednaFailedException
-
+                     liftIO $ sednaLoadData conn xs doc coll
+                     liftIO (print s) >>  liftI step
+         
     step stream = do
-      response <- liftIO $ sednaEndLoadData conn
-      case response of
+      response <- liftIO $ c'SEendLoadData conn
+      liftIO $ print =<< sednaGetLastErrorMsg conn
+      case fromCConstant response of
          BulkLoadSucceeded -> liftIO  (sednaCommit conn) >> idone () stream
          BulkLoadFailed    -> throw SednaBulkLoadFailedException
          _                 -> throw SednaFailedException
