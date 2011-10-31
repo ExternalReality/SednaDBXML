@@ -11,7 +11,7 @@ SUITE=./dist/build/testsuite/testsuite
 if [ ! -f $SUITE ]; then
     cat <<EOF
 Testsuite executable not found, please run:
-    cabal configure -ftest
+    cabal configure
 then
     cabal build
 EOF

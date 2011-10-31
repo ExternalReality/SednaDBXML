@@ -1,5 +1,5 @@
 Name:                   sednaDBXML
-Version:                0.1.2.2
+Version:                0.1.2.3
 License:                GPL-3
 Cabal-Version:          >= 1.10.0
 License-File:           LICENSE
@@ -7,13 +7,9 @@ Author:                 Eric C. Jones
 Build-Type:             Simple
 Maintainer:             Eric Jones (ericclaudejones at gmail.com)
 Stability:              alpha
-Synopsis:               Sedna Native XML Binding
+Synopsis:               Sedna C API XML Binding
 
-Description:            Sedna is a free native XML database developed by the
-                        Institute for System Programming RAS. This
-                        package provides bindings to the C API.
-
-                        Sedna Home Page:
+Description:            Sedna native XML database bindings.
                         http://www.sedna.org/
 
 Category:               Database, FFI
@@ -50,8 +46,7 @@ Library
   Include-Dirs:           include
   Includes:               libsedna.h,
                           sp_defs.h
-
-
+  
   Extra-Libraries:        sedna
 
   Ghc-Options:            -Wall

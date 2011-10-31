@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP #-}
+
 
 module Database.SednaDB.SednaBindings
     ( sednaBegin
@@ -33,7 +33,6 @@ import Prelude hiding             (replicate,concat)
 import qualified Data.Map as DM   (fromList, lookup)
 import Data.Iteratee as I hiding  (mapM_, peek)
 import Data.Iteratee.IO
-import Control.Monad
 import Control.Monad.Trans
 import Data.ByteString.Char8 as C
 import Control.Exception
