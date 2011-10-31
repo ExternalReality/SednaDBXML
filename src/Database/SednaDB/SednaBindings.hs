@@ -1,5 +1,3 @@
-
-
 module Database.SednaDB.SednaBindings
     ( sednaBegin
     , sednaCloseConnection
@@ -23,25 +21,27 @@ module Database.SednaDB.SednaBindings
     , sednaLoadData
     ) where
 
---------------------------------------------------------------------------------
-import Data.ByteString as BS
-import Data.Maybe
-import Foreign
-import Foreign.C.String
-import Foreign.C.Types
-import Prelude hiding             (replicate,concat)
-import qualified Data.Map as DM   (fromList, lookup)
-import Data.Iteratee as I hiding  (mapM_, peek)
-import Data.Iteratee.IO
-import Control.Monad.Trans
-import Data.ByteString.Char8 as C
-import Control.Exception
 
-import Database.SednaDB.SednaTypes
-import Database.SednaDB.Internal.SednaCBindings
-import Database.SednaDB.Internal.SednaConnectionAttributes
-import Database.SednaDB.Internal.SednaResponseCodes
-import Database.SednaDB.SednaExceptions
+--------------------------------------------------------------------------------
+import           Control.Exception
+import           Control.Monad.Trans
+import           Data.ByteString as BS
+import           Data.ByteString.Char8 as C
+import           Data.Iteratee as I hiding  (mapM_, peek)
+import           Data.Iteratee.IO
+import           Data.Maybe
+import           Foreign
+import           Foreign.C.String
+import           Foreign.C.Types
+import           Prelude hiding (replicate,concat)
+import qualified Data.Map as DM (fromList, lookup)
+
+import           Database.SednaDB.Internal.SednaCBindings
+import           Database.SednaDB.Internal.SednaConnectionAttributes
+import           Database.SednaDB.Internal.SednaResponseCodes
+import           Database.SednaDB.SednaExceptions
+import           Database.SednaDB.SednaTypes
+
 
 --------------------------------------------------------------------------------
 sednaConnect :: URL
@@ -70,6 +70,7 @@ sednaConnect url dbname login password =
       AuthenticationFailed  -> free conn >> throw SednaAuthenticationFailedException
       _                     -> free conn >> throw SednaFailedException 
     
+
 --------------------------------------------------------------------------------
 sednaCloseConnection :: SednaConnection -> IO ()
 sednaCloseConnection conn = do 
@@ -80,6 +81,7 @@ sednaCloseConnection conn = do
     CloseSessionFailed -> throw SednaCloseSessionFailedException
     _                  -> throw SednaFailedException
     
+
 --------------------------------------------------------------------------------
 sednaBegin :: SednaConnection -> IO ()
 sednaBegin conn = do
@@ -88,6 +90,7 @@ sednaBegin conn = do
     BeginTransactionSucceeded -> return ()
     BeginTransactionFailed    -> throw SednaBeginTransactionFailedException
     _                         -> throw SednaFailedException
+
 
 --------------------------------------------------------------------------------
 sednaRollBack :: SednaConnection -> IO ()
@@ -98,6 +101,7 @@ sednaRollBack conn = do
     RollBackTransactionFailed   -> throw SednaRollBackTransactionFailedException
     _                           -> throw SednaFailedException 
                 
+
 --------------------------------------------------------------------------------
 sednaCommit :: SednaConnection -> IO ()
 sednaCommit conn = do
@@ -106,6 +110,7 @@ sednaCommit conn = do
     CommitTransactionSucceeded -> return ()
     CommitTransactionFailed    -> throw SednaCommitTransactionFailedException
     _                          -> throw SednaFailedException
+
 
 --------------------------------------------------------------------------------
 sednaExecuteAction :: (SednaConnection -> CString -> IO CInt)
@@ -119,13 +124,16 @@ sednaExecuteAction sednaQueryAction conn query = do
     QueryFailed    -> throw SednaQueryFailedException
     _              -> throw SednaFailedException
 
+
 --------------------------------------------------------------------------------
 sednaExecuteLong :: SednaConnection -> Query -> IO ()
 sednaExecuteLong = sednaExecuteAction c'SEexecuteLong
 
+
 --------------------------------------------------------------------------------
 sednaExecute :: SednaConnection -> Query -> IO ()
 sednaExecute = sednaExecuteAction c'SEexecute
+
 
 --------------------------------------------------------------------------------
 sednaGetData :: SednaConnection -> Int -> IO (SednaResponseCode, ByteString)
@@ -147,6 +155,7 @@ sednaGetData conn size = useAsCStringLen (BS.replicate size 0) loadData
                                    | num > 0        = OperationSucceeded
                                    | otherwise      = SednaError
 
+
 --------------------------------------------------------------------------------
 sednaLoadData :: SednaConnection
               -> ByteString
@@ -167,6 +176,7 @@ sednaLoadData conn buff docName colName = do
             DataChunkLoaded -> return ()
             _               -> throw SednaFailedException
 
+
 --------------------------------------------------------------------------------
 sednaEndLoadData :: SednaConnection -> IO ()
 sednaEndLoadData conn = do
@@ -176,30 +186,36 @@ sednaEndLoadData conn = do
          BulkLoadSucceeded -> return ()
          _                 -> throw SednaFailedException
             
+
 --------------------------------------------------------------------------------
 sednaNext :: SednaConnection -> IO SednaResponseCode
 sednaNext conn = do
   resultCode <- c'SEnext conn
   return $ fromCConstant resultCode
            
+
 --------------------------------------------------------------------------------
 sednaGetLastErrorCode :: SednaConnection -> IO SednaResponseCode
 sednaGetLastErrorCode conn = do
   resultCode <- c'SEgetLastErrorCode conn
   return $ fromCConstant resultCode
 
+
 --------------------------------------------------------------------------------
 sednaGetLastErrorMsg :: SednaConnection -> IO String 
 sednaGetLastErrorMsg conn = peekCAString  =<< c'SEgetLastErrorMsg conn 
+
 
 --------------------------------------------------------------------------------
 sednaTransactionStatus :: SednaConnection -> IO SednaResponseCode
 sednaTransactionStatus conn = do resultCode <- c'SEtransactionStatus conn
                                  return $ fromCConstant resultCode
 
+
 --------------------------------------------------------------------------------
 sednaShowTime :: SednaConnection -> IO String
 sednaShowTime conn = peekCAString =<< c'SEshowTime conn
+
 
 --------------------------------------------------------------------------------
 sednaConnectionAttributeMap :: SednaConnAttrValue -> Maybe SednaConnectionAttr
@@ -217,6 +233,7 @@ sednaConnectionAttributeMap attr = DM.lookup attr attrValToAttrMap
                   , (boundarySpacePreserveOn  , attrBoundarySpacePreserveWhileLoad)
                   , (boundarySpacePreserveOff , attrBoundarySpacePreserveWhileLoad)
                   ]
+
 
 --------------------------------------------------------------------------------
 sednaSetConnectionAttr :: SednaConnection
@@ -239,6 +256,7 @@ sednaSetConnectionAttr conn attrVal =
               SetAttributeSucceeded  -> return ()
               _                      -> throw SednaFailedException)
 
+
 --------------------------------------------------------------------------------
 sednaGetConnectionAttr :: SednaConnection
                        -> SednaConnectionAttr
@@ -257,6 +275,7 @@ sednaGetConnectionAttr conn connAttr =
                 GetAttributeSucceeded -> return (SednaConnAttrValue response)
                 _                     -> throw SednaFailedException)     
 
+
 --------------------------------------------------------------------------------
 sednaResetAllConnectionAttr :: SednaConnection -> IO ()
 sednaResetAllConnectionAttr conn = do
@@ -265,9 +284,11 @@ sednaResetAllConnectionAttr conn = do
     ResetAttributeSucceeded -> return ()
     _                       -> throw SednaFailedException
 
+
 --------------------------------------------------------------------------------
 sednaGetResultString :: SednaConnection -> IO QueryResult
 sednaGetResultString conn = procItemStream conn 8 getXMLData
+
 
 --------------------------------------------------------------------------------
 getXMLData :: (Monad m) => Iteratee [ByteString] m QueryResult
@@ -277,6 +298,7 @@ getXMLData = icont (step C.empty) Nothing
           | bs == []  = icont (step acc) Nothing
           | otherwise = icont (step $ C.append acc (C.concat $ bs)) Nothing
       step acc (EOF _)                = idone (C.unpack acc) (EOF Nothing)
+
 
 --------------------------------------------------------------------------------
 procItemStream :: SednaConnection ->  Int -> Iteratee [ByteString] IO a -> IO a
@@ -290,12 +312,14 @@ procItemStream conn size iter = step iter
               NextItemFailed    -> throw SednaNextItemFailedException
               _                 -> throw SednaFailedException
 
+
 --------------------------------------------------------------------------------
 enumItemChunked  :: SednaConnection
                  -> Int
                  -> Iteratee [ByteString] IO a
                  -> IO (Iteratee ByteString IO (Iteratee [ByteString] IO a))
 enumItemChunked conn size = (enumItem conn size) .  I.group size
+
 
 --------------------------------------------------------------------------------
 enumItem :: SednaConnection -> Int -> Enumerator ByteString IO a
@@ -307,6 +331,7 @@ enumItem conn size = enumFromCallback cb ()
           OperationSucceeded -> return $ Right ((True, ()), result)
           ResultEnd          -> return $ Right ((False, ()), result)
           _                  -> throw SednaFailedException
+
 
 --------------------------------------------------------------------------------
 loadXMLBytes:: MonadIO m => SednaConnection
@@ -327,6 +352,7 @@ loadXMLBytes conn doc coll =  liftIO (sednaBegin conn) >> liftI step
          BulkLoadSucceeded -> liftIO  (sednaCommit conn) >> idone () stream
          BulkLoadFailed    -> throw SednaBulkLoadFailedException
          _                 -> throw SednaFailedException
+
 
 --------------------------------------------------------------------------------
 sednaLoadFile :: FilePath -> SednaConnection ->  Document -> Collection -> IO ()
