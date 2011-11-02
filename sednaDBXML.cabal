@@ -35,13 +35,13 @@ Library
                           iteratee >= 0.8,
                           mtl
 
-  Exposed-Modules:        Database.SednaDB.SednaBindings
-                          Database.SednaDB.SednaExceptions
-                          Database.SednaDB.SednaTypes                        
-                          Database.SednaDB.Internal.SednaCBindings
-                          Database.SednaDB.Internal.SednaConnectionAttributes
-                          Database.SednaDB.Internal.SednaResponseCodes
-                          Database.SednaDB.Internal.SpDefs
+  Exposed-Modules:        Database.SednaBindings
+                          Database.SednaExceptions
+                          Database.SednaTypes                        
+                          Database.Internal.SednaCBindings
+                          Database.Internal.SednaConnectionAttributes
+                          Database.Internal.SednaResponseCodes
+                          Database.Internal.SpDefs
 
   Include-Dirs:           include
   Includes:               libsedna.h,
@@ -56,4 +56,4 @@ Library
 
 Source-Repository Head
     type:                 git
-    location:             git@github.com:ExternalReality/SednaDBXML.git
+    location:             git@github.com:ExternalReality/XML.git
