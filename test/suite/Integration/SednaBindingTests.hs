@@ -15,19 +15,22 @@ import Test.HUnit hiding (Test)
 import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit
 
-import Database.SednaDB.SednaTypes
-import Database.SednaDB.SednaBindings
-import Database.SednaDB.Internal.SednaConnectionAttributes
-import Database.SednaDB.SednaExceptions
+import Database.SednaTypes
+import Database.SednaBindings
+import Database.Internal.SednaConnectionAttributes
+import Database.SednaExceptions
+
 
 --------------------------------------------------------------------------------
 type TestMsg = String
+
 
 --------------------------------------------------------------------------------
 testDBName :: [Char]
 testDBName = "SednaDBXMLTestDB"
 
 testCollName = "'testCollection'"
+
 
 --------------------------------------------------------------------------------
 bringUpDB :: IO String
@@ -39,10 +42,12 @@ bringUpDB = do readProcess "se_cdb"[testDBName] "/dev/null"
                                      ]
                                      "/dev/null"
 
+
 --------------------------------------------------------------------------------
 bringDownDB :: IO String
 bringDownDB = do readProcess "se_smsd" [testDBName] "/dev/null"
                  readProcess "se_ddb"  [testDBName] "/dev/null"
+
 
 --------------------------------------------------------------------------------
 setup :: IO SednaConnection
@@ -62,17 +67,21 @@ tearDown = \conn ->
     sednaCloseConnection conn
     bringDownDB
 
+
 --------------------------------------------------------------------------------
 formatMsg :: String -> String
 formatMsg rawMsg = printf "%-60s" rawMsg
+
 
 --------------------------------------------------------------------------------
 testCaseFMsg :: String -> Assertion -> Test
 testCaseFMsg = testCase . formatMsg
 
+
 --------------------------------------------------------------------------------
 sednaDBTest  :: (SednaConnection -> IO c) -> IO c
 sednaDBTest = bracket setup tearDown
+
 
 ----------------------------------------------------------------------------------
 connectionTest :: (SednaConnection -> IO ()) -> String -> Test
@@ -81,10 +90,13 @@ connectionTest connFun msg =
     catch (sednaDBTest connFun)
           (\(e :: SednaException) -> assertFailure $ show e)
 
+
 --------------------------------------------------------------------------------
 testOpenConnection :: Test
 testOpenConnection = testCaseFMsg "Testing connection initialization" openTest
 
+
+--------------------------------------------------------------------------------
 openTest :: IO ()
 openTest = do
   bracketOnError (bringUpDB)
@@ -93,21 +105,25 @@ openTest = do
   bringDownDB
   return ()
 
+
 --------------------------------------------------------------------------------
 --testCloseConnection :: Test
 --testCloseConnection =  connectionTest sednaCloseConnection
 --                                      "Test connection termination"
+
 
  --------------------------------------------------------------------------------
 testBeginTransaction :: Test
 testBeginTransaction = connectionTest sednaBegin
                                       "Test transaction initialization"
 
+
 ---------------------------------------------------------------------------------
 testSetConnectionAttr :: Test
 testSetConnectionAttr =
     connectionTest (\conn -> sednaSetConnectionAttr conn autoCommitOff)
                    "Testing modification of connection attributes"
+
 
 ---------------------------------------------------------------------------------
 testGetConnectionAttr :: Test
@@ -118,6 +134,7 @@ testGetConnectionAttr =
                                 autoCommitOff
                                 result)
                 "Testing inspection of connection attributes"
+
 
 ---------------------------------------------------------------------------------
 testLoadData :: Test
@@ -132,6 +149,7 @@ testLoadData =
                       sednaCommit conn)
                    "Testing proper loading of chunk data"
 
+
 --------------------------------------------------------------------------------
 testLoadFile :: Test
 testLoadFile = 
@@ -143,6 +161,7 @@ testLoadFile =
                                     "testCollection")
     "Test loading of XML file"
 
+
 --------------------------------------------------------------------------------
 testExecuteQuery :: Test
 testExecuteQuery = 
@@ -151,6 +170,7 @@ testExecuteQuery =
                       queryExecutionStatus <- sednaExecute conn "doc('$documents')"
                       sednaCommit conn)
                   "Testing Proper Execution of valid query"
+
 
 --------------------------------------------------------------------------------
 testLoadRetrieveData :: Test
@@ -169,16 +189,19 @@ testLoadRetrieveData =
                       sednaCommit conn)
                    "Test loading and retrieval of data."
 
+
 -----------------------------------------------------------------------------------
 connectionTests :: Test
 connectionTests = testGroup "Connection Tests" [ testOpenConnection
                                                ]
+
 
 --------------------------------------------------------------------------------
 controlTests :: Test
 controlTests = testGroup "Control Tests" [ testGetConnectionAttr
                                          , testSetConnectionAttr
                                          ]
+
 
 -- --------------------------------------------------------------------------------
 transactionTests :: Test
@@ -188,6 +211,7 @@ transactionTests = testGroup "Transaction Tests" [ testBeginTransaction
                                                  , testExecuteQuery
                                                  , testLoadRetrieveData
                                                  ]
+
 
 --------------------------------------------------------------------------------
 integrationTests :: Test

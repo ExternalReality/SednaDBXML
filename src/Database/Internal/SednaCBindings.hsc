@@ -9,7 +9,7 @@ import Foreign
 import Foreign.C.Types
 import Foreign.C.String
 
-import Database.SednaDB.Internal.SpDefs
+import Database.Internal.SpDefs
 
 --------------------------------------------------------------------------------
 #num QUERY_EXECUTION_TIME                      
