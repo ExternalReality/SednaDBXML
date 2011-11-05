@@ -32,3 +32,9 @@ loadXMLFile conn path doc coll = withTransaction conn $
 loadString conn str  doc coll =
     withTransaction conn $ (\conn' -> sednaLoadData conn' (pack str) doc coll)
 
+
+-------------------------------------------------------------------------------
+version :: SednaConnection -> IO QueryResult
+version conn = withTransaction conn $ (\conn' -> do
+                                         sednaExecute conn' "doc ('$version')"
+                                         sednaGetResultString conn')
