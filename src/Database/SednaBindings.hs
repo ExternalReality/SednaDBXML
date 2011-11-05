@@ -355,8 +355,8 @@ loadXMLBytes conn doc coll =  liftIO (sednaBegin conn) >> liftI step
 
 
 --------------------------------------------------------------------------------
-sednaLoadFile :: FilePath -> SednaConnection ->  Document -> Collection -> IO ()
-sednaLoadFile file conn doc coll = do
+sednaLoadFile :: SednaConnection -> FilePath ->  Document -> Collection -> IO ()
+sednaLoadFile conn file doc coll = do
    iteratee  <- enumFile 8 file $ loadXMLBytes 
                                   conn 
                                   doc 

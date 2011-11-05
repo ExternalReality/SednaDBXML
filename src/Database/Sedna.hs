@@ -5,7 +5,6 @@ import Database.SednaTypes
 import Control.Exception
 import Data.ByteString.Char8
 
-
 -------------------------------------------------------------------------------    
 withTransaction :: SednaConnection -> (SednaConnection -> IO a) -> IO a
 withTransaction conn func =
@@ -23,18 +22,13 @@ withTransaction conn func =
                 doRollbackHandler _ = return ()
 
 
--------------------------------------------------------------------------------    
--- sednaExample :: IO ()
--- sednaExample = do
---   let msg = pack "<msg>Hello Worl!</msg>"
---   conn <- sednaConnect "localhost" "apidb" "SYSTEM" "MANAGER"  
---   withTransaction conn 
---                   (\conn' -> do
---                      (sednaLoadData conn' msg "hello" "coll")
---                      (sednaEndLoadData conn'))
+-------------------------------------------------------------------------------
+loadXMLFile :: SednaConnection -> FilePath -> Document -> Collection -> IO ()
+loadXMLFile conn path doc coll = withTransaction conn $ 
+                                 (\conn' -> sednaLoadFile conn' path doc coll)
 
 
-
-
-
+-------------------------------------------------------------------------------
+loadString conn str  doc coll =
+    withTransaction conn $ (\conn' -> sednaLoadData conn' (pack str) doc coll)
 

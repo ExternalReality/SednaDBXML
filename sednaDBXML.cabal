@@ -1,5 +1,5 @@
 Name:                   sednaDBXML
-Version:                0.1.2.3
+Version:                0.1.2.4
 License:                GPL-3
 Cabal-Version:          >= 1.10.0
 License-File:           LICENSE
@@ -16,14 +16,14 @@ Category:               Database, FFI
 
 Extra-Source-Files:     include/libsedna.h
                         include/sp_defs.h
-			LICENSE,
+                        LICENSE,
                         licenses/sedna_headers/LICENSE,
                         test/fixtures/baseballleague.xml,
                         test/runTests.sh,
                         test/sedna-testsuite.cabal,
                         test/suite/Integration/SednaBindingTests.hs,
                         test/suite/TestSuite.hs,
-			README
+                        README
 
 Library
   Hs-Source-Dirs:         src
@@ -37,7 +37,8 @@ Library
 
   Exposed-Modules:        Database.SednaBindings
                           Database.SednaExceptions
-                          Database.SednaTypes                        
+                          Database.SednaTypes
+                          Database.Sedna                        
                           Database.Internal.SednaCBindings
                           Database.Internal.SednaConnectionAttributes
                           Database.Internal.SednaResponseCodes
