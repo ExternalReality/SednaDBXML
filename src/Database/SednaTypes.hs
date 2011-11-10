@@ -1,6 +1,5 @@
 module Database.SednaTypes
     ( SednaConnection
-    , QueryResult
     , Query
     , Document
     , Collection
@@ -40,8 +39,6 @@ type SednaConnection = Ptr C'SednaConnection
 
 --------------------------------------------------------------------------------
 type Query       = String
-type QueryResult = String
-
 
 --------------------------------------------------------------------------------
 type ErrorMsg = String

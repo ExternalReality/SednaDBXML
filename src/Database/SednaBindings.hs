@@ -10,7 +10,7 @@ module Database.SednaBindings
     , sednaGetData
     , sednaGetLastErrorCode
     , sednaGetLastErrorMsg
-    , sednaGetResultString
+    , sednaGetResult
     , sednaNext
     , sednaResetAllConnectionAttr
     , sednaRollBack
@@ -26,7 +26,7 @@ module Database.SednaBindings
 import           Control.Exception
 import           Control.Monad.Trans
 import           Data.ByteString as BS
-import           Data.ByteString.Char8 as C
+import qualified Data.ByteString.Char8 as C
 import           Data.Iteratee as I hiding  (mapM_, peek)
 import           Data.Iteratee.IO
 import           Data.Maybe
@@ -35,6 +35,9 @@ import           Foreign.C.String
 import           Foreign.C.Types
 import           Prelude hiding (replicate,concat)
 import qualified Data.Map as DM (fromList, lookup)
+import           Data.Text (Text)       
+import qualified Data.Text as T
+import           Data.Text.Encoding
 
 import           Database.Internal.SednaCBindings
 import           Database.Internal.SednaConnectionAttributes
@@ -286,18 +289,18 @@ sednaResetAllConnectionAttr conn = do
 
 
 --------------------------------------------------------------------------------
-sednaGetResultString :: SednaConnection -> IO QueryResult
-sednaGetResultString conn = procItemStream conn 8 getXMLData
+sednaGetResult :: SednaConnection -> IO Text
+sednaGetResult conn = procItemStream conn 8 getXMLData
 
 
 --------------------------------------------------------------------------------
-getXMLData :: (Monad m) => Iteratee [ByteString] m QueryResult
+getXMLData :: (Monad m) => Iteratee [ByteString] m Text
 getXMLData = icont (step C.empty) Nothing
     where
       step acc (Chunk bs) 
           | bs == []  = icont (step acc) Nothing
           | otherwise = icont (step $ C.append acc (C.concat $ bs)) Nothing
-      step acc (EOF _)                = idone (C.unpack acc) (EOF Nothing)
+      step acc (EOF _)                = idone (decodeUtf8 acc) (EOF Nothing)
 
 
 --------------------------------------------------------------------------------

@@ -1,9 +1,11 @@
 module Database.Sedna where
 
-import Database.SednaBindings
-import Database.SednaTypes
-import Control.Exception
-import Data.ByteString.Char8
+import           Database.SednaBindings
+import           Database.SednaTypes
+import           Control.Exception
+import           Data.ByteString.Char8
+import           Data.Text (Text)
+import qualified Data.Text as Text
 
 -------------------------------------------------------------------------------    
 withTransaction :: SednaConnection -> (SednaConnection -> IO a) -> IO a
@@ -34,7 +36,7 @@ loadString conn str  doc coll =
 
 
 -------------------------------------------------------------------------------
-version :: SednaConnection -> IO QueryResult
+version :: SednaConnection -> IO Text
 version conn = withTransaction conn $ (\conn' -> do
                                          sednaExecute conn' "doc ('$version')"
-                                         sednaGetResultString conn')
+                                         sednaGetResult conn')

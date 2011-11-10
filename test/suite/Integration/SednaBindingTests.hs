@@ -1,24 +1,25 @@
-{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Integration.SednaBindingTests (integrationTests) where
 
 --------------------------------------------------------------------------------
-import Prelude hiding          (catch)
-import Control.Exception
-import Data.ByteString.Char8   (pack, unpack)
-import Foreign                 (free)
-import System.Process          (readProcess)
-import Text.Printf             (printf)
+import           Prelude hiding          (catch)
+import           Control.Exception
+import           Data.ByteString.Char8   (pack, unpack)
+import           Foreign                 (free)
+import           System.Process          (readProcess)
+import           Text.Printf             (printf)
 
-import Test.HUnit hiding (Test)
-import Test.Framework (Test, testGroup)
-import Test.Framework.Providers.HUnit
+import           Test.HUnit hiding (Test)
+import           Test.Framework (Test, testGroup)
+import           Test.Framework.Providers.HUnit
 
-import Database.SednaTypes
-import Database.SednaBindings
-import Database.Internal.SednaConnectionAttributes
-import Database.SednaExceptions
+import           Database.SednaTypes
+import           Database.SednaBindings
+import           Database.Internal.SednaConnectionAttributes
+import           Database.SednaExceptions
+import qualified Data.Text as T
+import           Data.Text.Encoding (decodeUtf8)
 
 
 --------------------------------------------------------------------------------
@@ -26,7 +27,7 @@ type TestMsg = String
 
 
 --------------------------------------------------------------------------------
-testDBName :: [Char]
+testDBName :: String
 testDBName = "SednaDBXMLTestDB"
 
 testCollName = "'testCollection'"
@@ -59,10 +60,10 @@ setup = do
 
          bringUpDB
          onException (sednaConnect url dbname login password)
-                     (bringDownDB)
+                     bringDownDB
 
 tearDown :: SednaConnection -> IO String
-tearDown = \conn ->
+tearDown conn =
   do
     sednaCloseConnection conn
     bringDownDB
@@ -70,7 +71,7 @@ tearDown = \conn ->
 
 --------------------------------------------------------------------------------
 formatMsg :: String -> String
-formatMsg rawMsg = printf "%-60s" rawMsg
+formatMsg = printf "%-60s"
 
 
 --------------------------------------------------------------------------------
@@ -99,7 +100,7 @@ testOpenConnection = testCaseFMsg "Testing connection initialization" openTest
 --------------------------------------------------------------------------------
 openTest :: IO ()
 openTest = do
-  bracketOnError (bringUpDB)
+  bracketOnError bringUpDB
                  (\_ -> bringDownDB >> assertFailure "Open Connection Failed")
                  (\_ -> sednaConnect "localhost" testDBName "SYSTEM" "MANAGER" >>= free)
   bringDownDB
@@ -115,13 +116,13 @@ openTest = do
  --------------------------------------------------------------------------------
 testBeginTransaction :: Test
 testBeginTransaction = connectionTest sednaBegin
-                                      "Test transaction initialization"
+                                      "Testing transaction initialization"
 
 
 ---------------------------------------------------------------------------------
 testSetConnectionAttr :: Test
 testSetConnectionAttr =
-    connectionTest (\conn -> sednaSetConnectionAttr conn autoCommitOff)
+    connectionTest (`sednaSetConnectionAttr` autoCommitOff)
                    "Testing modification of connection attributes"
 
 
@@ -154,12 +155,11 @@ testLoadData =
 testLoadFile :: Test
 testLoadFile = 
     let testFile = "fixtures/baseballleague.xml" in
-    connectionTest (\conn -> do
-                      sednaLoadFile testFile
-                                    conn
-                                    "testdoc3"
-                                    "testCollection")
-    "Test loading of XML file"
+    connectionTest (\conn -> sednaLoadFile conn
+                                           testFile                                 
+                                           "testdoc3"
+                                           "testCollection")
+    "Testing loading of XML file"
 
 
 --------------------------------------------------------------------------------
@@ -182,12 +182,12 @@ testLoadRetrieveData =
                       sednaEndLoadData conn
                       sednaExecute conn "doc('testdoc','testCollection')/note"
 
-                      queryResult <- sednaGetResultString conn
+                      queryResult <- sednaGetResult conn
                       assertEqual "Testing proper retrieval of query results"
-                                  (unpack xmlData)
-                                  (concat.lines $ queryResult)
+                                  (decodeUtf8 xmlData)
+                                  (T.concat.T.lines $ queryResult)
                       sednaCommit conn)
-                   "Test loading and retrieval of data."
+                   "Testing loading and retrieval of data."
 
 
 -----------------------------------------------------------------------------------

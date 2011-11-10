@@ -33,7 +33,8 @@ Library
                           bytestring,
                           containers,
                           iteratee >= 0.8,
-                          mtl
+                          mtl,
+                          text
 
   Exposed-Modules:        Database.SednaBindings
                           Database.SednaExceptions
