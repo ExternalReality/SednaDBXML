@@ -68,7 +68,7 @@ sednaConnect url dbname login password =
     mapM_ free [cUrl,cDbname,cLogin,cPassword]
    
     case fromCConstant status of 
-      SessionOpen           -> return $ conn
+      SessionOpen           -> return conn
       OpenSessionFailed     -> free conn >> throw SednaOpenSessionFailedException
       AuthenticationFailed  -> free conn >> throw SednaAuthenticationFailedException
       _                     -> free conn >> throw SednaFailedException 
@@ -147,10 +147,10 @@ sednaGetData conn size = useAsCStringLen (BS.replicate size 0) loadData
       let size' = fromIntegral (snd bufferLengthPair)
 
       numOfBytesRead  <- c'SEgetData conn buff size'
-      response        <- return $ getResponse numOfBytesRead size'
+      let response    =  getResponse numOfBytesRead size'
       bytes           <- packCStringLen (buff, fromIntegral numOfBytesRead)
 
-      return $ (response, bytes)
+      return (response, bytes)
         where
           getResponse num buffSize | num  > buffSize = SednaError
                                    | num  < 0        = fromCConstant num
@@ -165,7 +165,7 @@ sednaLoadData :: SednaConnection
               -> Document
               -> Collection
               -> IO ()
-sednaLoadData conn buff docName colName = do
+sednaLoadData conn buff docName colName = 
   useAsCStringLen buff loadData
       where
         loadData s = do
@@ -299,7 +299,7 @@ getXMLData = icont (step C.empty) Nothing
     where
       step acc (Chunk bs) 
           | bs == []  = icont (step acc) Nothing
-          | otherwise = icont (step $ C.append acc (C.concat $ bs)) Nothing
+          | otherwise = icont (step $ C.append acc (C.concat bs)) Nothing
       step acc (EOF _)                = idone (decodeUtf8 acc) (EOF Nothing)
 
 
@@ -321,13 +321,13 @@ enumItemChunked  :: SednaConnection
                  -> Int
                  -> Iteratee [ByteString] IO a
                  -> IO (Iteratee ByteString IO (Iteratee [ByteString] IO a))
-enumItemChunked conn size = (enumItem conn size) .  I.group size
+enumItemChunked conn size = enumItem conn size .  I.group size
 
 
 --------------------------------------------------------------------------------
 enumItem :: SednaConnection -> Int -> Enumerator ByteString IO a
 enumItem conn size = enumFromCallback cb ()
-    where
+    where          
       cb () = do
         (code, result) <- sednaGetData conn size
         case code of
@@ -344,7 +344,7 @@ loadXMLBytes:: MonadIO m => SednaConnection
 loadXMLBytes conn doc coll =  liftIO (sednaBegin conn) >> liftI step
   where
     step (I.Chunk xs)
-      | xs == (C.pack "") = liftI step
+      | xs == C.pack "" = liftI step
       | otherwise = do
                      liftIO $ sednaLoadData conn xs doc coll
                      liftI step
