@@ -2,7 +2,6 @@ SednaDBXML is a Haskell library and a binding to
 the C language drivers of sedna native XML
 Database System.
 
-This software is in an early state.
 
 Please keep an eye on this repository and watch
 for changes. In the mean time, checkout the sedna
